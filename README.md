@@ -86,17 +86,16 @@ python nlm_interpreter.py -f macros/workflow.md
 python nlm_interpreter.py -m llama3.1:8b -e http://localhost:11434/v1 "Save today to {{@date}}"
 ```
 
-## Configuration
+## Helper Tools
 
-Default settings:
-- Model: `gpt-oss:20b`  
-- Endpoint: `http://localhost:1234/v1` (LMStudio)
-- Database: `variables.db`
-
-Environment variables:
 ```bash
-export NLM_MODEL="llama3.1:8b"
-export NLM_ENDPOINT="http://localhost:11434/v1"  # For Ollama
+# Real-time variable monitoring
+python watch_variables.py
+
+# View variable change history
+python history_viewer.py recent --hours 24
+python history_viewer.py stats
+python history_viewer.py export history.json -f json
 ```
 
 ## Variable History Logging
@@ -144,6 +143,19 @@ python tests/test_nlm_interpreter.py
 python tests/test_variable_db_basic.py
 python tests/test_at_prefix_api.py
 python tests/test_global_sharing.py
+```
+
+## Configuration
+
+Default settings work out-of-the-box:
+- Model: `gpt-oss:20b`  
+- Endpoint: `http://localhost:1234/v1` (LMStudio)
+- Database: `variables.db`
+
+Optional environment variables (only if using different LLM setup):
+```bash
+export NLM_MODEL="llama3.1:8b"
+export NLM_ENDPOINT="http://localhost:11434/v1"  # For Ollama
 ```
 
 ## Documentation
