@@ -3,7 +3,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from nlm_interpreter import NLMSession
 from variable_history import enable_logging

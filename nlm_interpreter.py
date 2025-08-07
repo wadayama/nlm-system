@@ -19,6 +19,11 @@ from variable_history import VariableHistoryManager
 class NLMSession:
     """Natural Language Macro Session Manager"""
     
+    # Constants for namespace handling
+    NAMESPACE_SEPARATOR = ":"
+    GLOBAL_PREFIX = "global"
+    AT_PREFIX = "@"
+    
     def __init__(self, namespace=None, model=None, endpoint=None, api_key="ollama"):
         """Initialize NLM session
         
@@ -73,8 +78,118 @@ RESPONSE FORMAT:
 
 Available tools: save_variable, get_variable, list_variables, delete_variable, delete_all_variables"""
 
+    # Tools definition for OpenAI API
+    TOOLS_DEFINITION = [
+        {
+            "type": "function",
+            "function": {
+                "name": "save_variable",
+                "description": "Save a value to a variable with namespace support",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "Variable name (with or without namespace)"},
+                        "value": {"type": "string", "description": "Value to save"}
+                    },
+                    "required": ["name", "value"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_variable",
+                "description": "Get a variable value with namespace support",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "Variable name (with or without namespace)"}
+                    },
+                    "required": ["name"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "list_variables",
+                "description": "List all variables in the database",
+                "parameters": {"type": "object", "properties": {}, "required": []}
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "delete_variable",
+                "description": "Delete a variable with namespace support",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "Variable name (with or without namespace)"}
+                    },
+                    "required": ["name"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "delete_all_variables",
+                "description": "Delete all variables in the database",
+                "parameters": {"type": "object", "properties": {}, "required": []}
+            }
+        }
+    ]
+
+    def _parse_key_with_namespace(self, key):
+        """Parse key and return full_key, namespace, and clean_key for logging
+        
+        Args:
+            key: Variable name (may include @ prefix)
+            
+        Returns:
+            tuple: (full_key, namespace, log_key)
+        """
+        if key.startswith(self.AT_PREFIX):
+            # Global variable: @key -> global:key
+            clean_key = key[1:]  # Remove @ prefix
+            full_key = f"{self.GLOBAL_PREFIX}{self.NAMESPACE_SEPARATOR}{clean_key}"
+            namespace = self.GLOBAL_PREFIX
+            log_key = clean_key
+        else:
+            # Local variable: key -> namespace:key
+            full_key = f"{self.namespace}{self.NAMESPACE_SEPARATOR}{key}"
+            namespace = self.namespace
+            log_key = key
+        
+        return full_key, namespace, log_key
+
+    def _split_full_key(self, full_key):
+        """Split full key into namespace and variable name
+        
+        Args:
+            full_key: Full variable name with namespace
+            
+        Returns:
+            tuple: (namespace, var_name)
+        """
+        if self.NAMESPACE_SEPARATOR in full_key:
+            return full_key.split(self.NAMESPACE_SEPARATOR, 1)
+        return "unknown", full_key
+
+    def _log_variable_change(self, full_key, old_value, new_value):
+        """Log variable change to history
+        
+        Args:
+            full_key: Full variable name with namespace
+            old_value: Previous value
+            new_value: New value
+        """
+        namespace, var_name = self._split_full_key(full_key)
+        self.history_manager.log_change(namespace, var_name, old_value, new_value)
+
     def _resolve_variable_name(self, variable_name):
-        """Resolve variable name with namespace
+        """Resolve variable name with namespace (legacy method for backward compatibility)
         
         Args:
             variable_name: Variable name (may include namespace or @ prefix)
@@ -83,9 +198,9 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             Resolved variable name with namespace
         """
         # Handle global variables with @ prefix
-        if variable_name.startswith("@"):
+        if variable_name.startswith(self.AT_PREFIX):
             # Convert @variable to global.variable
-            return f"global.{variable_name[1:]}"
+            return f"{self.GLOBAL_PREFIX}.{variable_name[1:]}"
         elif "." in variable_name:
             # Already has namespace (e.g., global.var, session.var)
             return variable_name
@@ -191,116 +306,37 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             success = self.variable_db.delete_variable(name)
             if success:
                 # Log deletion to history
-                namespace = name.split(".", 1)[0] if "." in name else "unknown"
-                var_name = name.split(".", 1)[1] if "." in name else name
-                self.history_manager.log_change(namespace, var_name, old_value, None)
-                
+                self._log_variable_change(name, old_value, None)
                 deleted_count += 1
                 deleted_vars.append(name)
         
         return f"Successfully deleted {deleted_count} variables: {', '.join(deleted_vars)}"
 
-    def _get_tools_definition(self):
-        """Get OpenAI tools definition"""
-        return [
-            {
-                "type": "function",
-                "function": {
-                    "name": "save_variable",
-                    "description": "Save a value to a variable with namespace support",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string",
-                                "description": "Variable name (with or without namespace)"
-                            },
-                            "value": {
-                                "type": "string", 
-                                "description": "Value to save"
-                            }
-                        },
-                        "required": ["name", "value"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_variable",
-                    "description": "Get a variable value with namespace support",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string",
-                                "description": "Variable name (with or without namespace)"
-                            }
-                        },
-                        "required": ["name"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "list_variables",
-                    "description": "List all variables in the database",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "delete_variable",
-                    "description": "Delete a variable with namespace support",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string",
-                                "description": "Variable name (with or without namespace)"
-                            }
-                        },
-                        "required": ["name"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "delete_all_variables",
-                    "description": "Delete all variables in the database",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                }
-            }
-        ]
-
     def _execute_tool_call(self, tool_call):
         """Execute a tool call and return result"""
-        function_name = tool_call.function.name
-        arguments = json.loads(tool_call.function.arguments)
-        
-        if function_name == "save_variable":
-            return self._save_variable_tool(arguments["name"], arguments["value"])
-        elif function_name == "get_variable":
-            return self._get_variable_tool(arguments["name"])
-        elif function_name == "list_variables":
-            return self._list_variables_tool()
-        elif function_name == "delete_variable":
-            return self._delete_variable_tool(arguments["name"])
-        elif function_name == "delete_all_variables":
-            return self._delete_all_variables_tool()
-        else:
-            return f"Unknown function: {function_name}"
+        try:
+            function_name = tool_call.function.name
+            arguments = json.loads(tool_call.function.arguments)
+            
+            if function_name == "save_variable":
+                return self._save_variable_tool(arguments["name"], arguments["value"])
+            elif function_name == "get_variable":
+                return self._get_variable_tool(arguments["name"])
+            elif function_name == "list_variables":
+                return self._list_variables_tool()
+            elif function_name == "delete_variable":
+                return self._delete_variable_tool(arguments["name"])
+            elif function_name == "delete_all_variables":
+                return self._delete_all_variables_tool()
+            else:
+                return f"Unknown function: {function_name}"
+                
+        except json.JSONDecodeError as e:
+            return f"Error parsing tool arguments for {function_name}: {str(e)}"
+        except KeyError as e:
+            return f"Missing required argument for {function_name}: {str(e)}"
+        except Exception as e:
+            return f"Error executing tool {function_name}: {str(e)}"
 
     def execute(self, macro_content):
         """Execute natural language macro content
@@ -323,7 +359,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                tools=self._get_tools_definition(),
+                tools=self.TOOLS_DEFINITION,
                 max_tokens=1000
             )
             
@@ -342,6 +378,8 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             
             return "\n".join(result_parts) if result_parts else "Macro executed (no output)"
             
+        except json.JSONDecodeError as e:
+            return f"Error parsing tool arguments: {str(e)}"
         except Exception as e:
             return f"Error executing macro: {str(e)}"
     
@@ -356,23 +394,13 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         Returns:
             Full variable name that was saved
         """
-        if key.startswith("@"):
-            # Global variable: @key -> global:key
-            clean_key = key[1:]  # Remove @ prefix
-            full_key = f"global:{clean_key}"
-            namespace = "global"
-            log_key = clean_key
-        else:
-            # Local variable: key -> namespace:key
-            full_key = f"{self.namespace}:{key}"
-            namespace = self.namespace
-            log_key = key
+        full_key, namespace, log_key = self._parse_key_with_namespace(key)
         
         old_value = self.variable_db.get_variable(full_key)
         self.variable_db.save_variable(full_key, str(value))
         
         # Log to history if enabled
-        self.history_manager.log_change(namespace, log_key, old_value, str(value))
+        self._log_variable_change(full_key, old_value, str(value))
         
         return full_key
     
@@ -385,14 +413,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         Returns:
             Variable value or None if not found
         """
-        if key.startswith("@"):
-            # Global variable: @key -> global:key
-            clean_key = key[1:]  # Remove @ prefix
-            full_key = f"global:{clean_key}"
-        else:
-            # Local variable: key -> namespace:key
-            full_key = f"{self.namespace}:{key}"
-        
+        full_key, _, _ = self._parse_key_with_namespace(key)
         return self.variable_db.get_variable(full_key)
     
     def delete(self, key):
@@ -404,25 +425,14 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         Returns:
             True if deleted, False if not found
         """
-        if key.startswith("@"):
-            # Global variable: @key -> global:key
-            clean_key = key[1:]  # Remove @ prefix
-            full_key = f"global:{clean_key}"
-            namespace = "global"
-            log_key = clean_key
-        else:
-            # Local variable: key -> namespace:key
-            full_key = f"{self.namespace}:{key}"
-            namespace = self.namespace
-            log_key = key
-        
+        full_key, _, _ = self._parse_key_with_namespace(key)
         old_value = self.variable_db.get_variable(full_key)
         
         if old_value is not None:
             success = self.variable_db.delete_variable(full_key)
             if success:
                 # Log to history if enabled
-                self.history_manager.log_change(namespace, log_key, old_value, None)
+                self._log_variable_change(full_key, old_value, None)
             return success
         return False
     
@@ -436,12 +446,12 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         Returns:
             Full variable name that was saved
         """
-        full_key = f"global:{key}"
+        full_key = f"{self.GLOBAL_PREFIX}{self.NAMESPACE_SEPARATOR}{key}"
         old_value = self.variable_db.get_variable(full_key)
         self.variable_db.save_variable(full_key, str(value))
         
         # Log to history if enabled
-        self.history_manager.log_change("global", key, old_value, str(value))
+        self._log_variable_change(full_key, old_value, str(value))
         
         return full_key
     
@@ -454,7 +464,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         Returns:
             Variable value or None if not found
         """
-        full_key = f"global:{key}"
+        full_key = f"{self.GLOBAL_PREFIX}{self.NAMESPACE_SEPARATOR}{key}"
         return self.variable_db.get_variable(full_key)
     
     def delete_global(self, key):
@@ -466,14 +476,14 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         Returns:
             True if deleted, False if not found
         """
-        full_key = f"global:{key}"
+        full_key = f"{self.GLOBAL_PREFIX}{self.NAMESPACE_SEPARATOR}{key}"
         old_value = self.variable_db.get_variable(full_key)
         
         if old_value is not None:
             success = self.variable_db.delete_variable(full_key)
             if success:
                 # Log to history if enabled
-                self.history_manager.log_change("global", key, old_value, None)
+                self._log_variable_change(full_key, old_value, None)
             return success
         return False
     
@@ -484,7 +494,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             Dict of variable names (without namespace) to values
         """
         all_vars = self.variable_db.list_variables()
-        prefix = f"{self.namespace}:"
+        prefix = f"{self.namespace}{self.NAMESPACE_SEPARATOR}"
         local_vars = {}
         
         for full_key, value in all_vars.items():
@@ -501,7 +511,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             Dict of global variable names (without namespace) to values
         """
         all_vars = self.variable_db.list_variables()
-        prefix = "global:"
+        prefix = f"{self.GLOBAL_PREFIX}{self.NAMESPACE_SEPARATOR}"
         global_vars = {}
         
         for full_key, value in all_vars.items():
@@ -518,7 +528,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             Number of variables deleted
         """
         all_vars = self.variable_db.list_variables()
-        prefix = f"{self.namespace}:"
+        prefix = f"{self.namespace}{self.NAMESPACE_SEPARATOR}"
         count = 0
         
         for full_key in list(all_vars.keys()):
@@ -526,8 +536,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
                 if self.variable_db.delete_variable(full_key):
                     count += 1
                     # Log to history if enabled
-                    key = full_key[len(prefix):]
-                    self.history_manager.log_change(self.namespace, key, all_vars[full_key], None)
+                    self._log_variable_change(full_key, all_vars[full_key], None)
         
         return count
 
@@ -548,6 +557,59 @@ def nlm_execute(macro_content, namespace=None, model=None, endpoint=None):
     return session.execute(macro_content)
 
 
+def _handle_list_sessions():
+    """Handle --list-sessions command"""
+    db = VariableDB("variables.db")
+    variables = db.list_variables()
+    namespaces = set()
+    
+    for var_name in variables.keys():
+        if NLMSession.NAMESPACE_SEPARATOR in var_name:
+            namespace = var_name.split(NLMSession.NAMESPACE_SEPARATOR, 1)[0]
+            namespaces.add(namespace)
+    
+    if namespaces:
+        print("Available sessions:")
+        for ns in sorted(namespaces):
+            print(f"  {ns}")
+    else:
+        print("No sessions found")
+
+
+def _execute_from_file(file_path, namespace, model, endpoint):
+    """Execute macros from file"""
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        
+        session = NLMSession(namespace=namespace, model=model, endpoint=endpoint)
+        
+        for line_num, line in enumerate(lines, 1):
+            line = line.strip()
+            # Skip empty lines and markdown headers/comments
+            if not line or line.startswith('#') or line.startswith('Execute this file'):
+                continue
+            
+            print(f"Executing line {line_num}: {line}")
+            try:
+                result = session.execute(line)
+                print(f"Result: {result}")
+                print("-" * 50)
+            except Exception as e:
+                print(f"Error on line {line_num}: {e}")
+                print("-" * 50)
+                
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        sys.exit(1)
+
+
+def _execute_single_macro(macro_content, namespace, model, endpoint):
+    """Execute single macro"""
+    result = nlm_execute(macro_content, namespace, model, endpoint)
+    print(result)
+
+
 def main():
     """Command line interface"""
     parser = argparse.ArgumentParser(description="Natural Language Macro Interpreter")
@@ -565,62 +627,13 @@ def main():
     endpoint = os.getenv("NLM_ENDPOINT", args.endpoint)
     
     if args.list_sessions:
-        # List sessions from variable database
-        db = VariableDB("variables.db")
-        variables = db.list_variables()
-        namespaces = set()
-        for var_name in variables.keys():
-            if "." in var_name:
-                namespace = var_name.split(".", 1)[0]
-                namespaces.add(namespace)
-        
-        if namespaces:
-            print("Available sessions:")
-            for ns in sorted(namespaces):
-                print(f"  {ns}")
-        else:
-            print("No sessions found")
+        _handle_list_sessions()
         return
     
-    # Get macro content
     if args.file:
-        try:
-            with open(args.file, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-            
-            # Process each line as a separate macro
-            session = NLMSession(namespace=args.namespace, model=model, endpoint=endpoint)
-            
-            for line_num, line in enumerate(lines, 1):
-                line = line.strip()
-                # Skip empty lines and markdown headers/comments
-                if not line or line.startswith('#') or line.startswith('Execute this file'):
-                    continue
-                
-                print(f"Executing line {line_num}: {line}")
-                try:
-                    result = session.execute(line)
-                    print(f"Result: {result}")
-                    
-                    # Debug: Check if variables were actually saved
-                    if "save" in line.lower() and "{{" in line:
-                        variables = session.variable_db.list_variables()
-                        recent_vars = {k: v for k, v in variables.items() if session.namespace in k}
-                        print(f"Debug - Current session variables: {recent_vars}")
-                    
-                    print("-" * 50)
-                except Exception as e:
-                    print(f"Error on line {line_num}: {e}")
-                    print("-" * 50)
-                    
-        except Exception as e:
-            print(f"Error reading file: {e}")
-            sys.exit(1)
+        _execute_from_file(args.file, args.namespace, model, endpoint)
     elif args.macro_content:
-        macro_content = args.macro_content
-        # Execute single macro
-        result = nlm_execute(macro_content, args.namespace, model, endpoint)
-        print(result)
+        _execute_single_macro(args.macro_content, args.namespace, model, endpoint)
     else:
         print("Error: Provide macro content or use -f to read from file")
         parser.print_help()
