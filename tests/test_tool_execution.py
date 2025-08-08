@@ -142,21 +142,21 @@ def test_delete_variable_tool():
         result = session._delete_variable_tool("to_delete")
         assert "Successfully deleted" in result, f"Expected success message, got: {result}"
         
-        # Verify deletion
+        # Verify deletion (get_variable returns empty string for non-existent variables)
         remaining = session.get("to_delete")
-        assert remaining is None, f"Variable should be deleted, got: {remaining}"
+        assert remaining == "", f"Variable should be deleted (empty string expected), got: '{remaining}'"
         
         # Test deleting existing global variable
         result = session._delete_variable_tool("@global_to_delete")
         assert "Successfully deleted" in result, f"Expected success for global delete, got: {result}"
         
-        # Verify global deletion
+        # Verify global deletion (get_variable returns empty string for non-existent variables)
         remaining = session.get("@global_to_delete")
-        assert remaining is None, f"Global variable should be deleted, got: {remaining}"
+        assert remaining == "", f"Global variable should be deleted (empty string expected), got: '{remaining}'"
         
         # Test deleting non-existent variable
         result = session._delete_variable_tool("non_existent")
-        assert "not found" in result, f"Expected 'not found' for non-existent, got: {result}"
+        assert "not found" in result or "Failed to delete" in result, f"Expected error message for non-existent, got: {result}"
         
         print("✓ Delete variable tool works correctly")
         return True

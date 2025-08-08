@@ -18,10 +18,10 @@ def test_basic_variable_expansion():
         # Test the actual behavior of _expand_variables
         # It should handle variables that exist in the current format
         
-        # Directly save in the old format for testing expansion
-        session.variable_db.save_variable("expansion_test.name", "Alice")
-        session.variable_db.save_variable("expansion_test.age", "25") 
-        session.variable_db.save_variable("global.project", "AI Research")
+        # Save in the correct format for testing expansion
+        session.variable_db.save_variable("expansion_test:name", "Alice")
+        session.variable_db.save_variable("expansion_test:age", "25") 
+        session.variable_db.save_variable("global:project", "AI Research")
         
         # Test simple expansion
         result = session._expand_variables("Hello {{name}}")

@@ -199,14 +199,18 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         """
         # Handle global variables with @ prefix
         if variable_name.startswith(self.AT_PREFIX):
-            # Convert @variable to global.variable
-            return f"{self.GLOBAL_PREFIX}.{variable_name[1:]}"
-        elif "." in variable_name:
-            # Already has namespace (e.g., global.var, session.var)
+            # Convert @variable to global:variable
+            return f"{self.GLOBAL_PREFIX}{self.NAMESPACE_SEPARATOR}{variable_name[1:]}"
+        elif self.NAMESPACE_SEPARATOR in variable_name or "." in variable_name:
+            # Already has namespace (e.g., global:var, session:var, or legacy global.var)
+            # Convert legacy dot format to colon format if needed
+            if "." in variable_name and self.NAMESPACE_SEPARATOR not in variable_name:
+                namespace, var_name = variable_name.split(".", 1)
+                return f"{namespace}{self.NAMESPACE_SEPARATOR}{var_name}"
             return variable_name
         else:
             # Session variable
-            return f"{self.namespace}.{variable_name}"
+            return f"{self.namespace}{self.NAMESPACE_SEPARATOR}{variable_name}"
     
     def _expand_variables(self, text):
         """Expand {{variable}} and {{@variable}} references in text
