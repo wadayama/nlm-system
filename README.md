@@ -73,6 +73,67 @@ print(data_session.get("@model_status"))   # "training"
 print(model_session.get("@model_status"))  # "training"
 ```
 
+## Executing Multi-line Macro Files
+
+### From Python Code
+
+```python
+from nlm_interpreter import NLMSession
+from pathlib import Path
+
+# Create a session
+session = NLMSession(namespace="workflow")
+
+# Read and execute a multi-line macro file
+macro_file = Path("macros/data_pipeline.md")
+macro_content = macro_file.read_text()
+
+# Execute the entire macro file
+result = session.execute(macro_content)
+print(f"Execution result: {result}")
+
+# Check the variables that were set
+print(f"Pipeline status: {session.get('@pipeline_status')}")
+print(f"Output file: {session.get('output_file')}")
+```
+
+Example macro file (`macros/data_pipeline.md`):
+```markdown
+Initialize data processing pipeline.
+
+Save 'started' to {{@pipeline_status}}.
+Set {{input_file}} to '/data/raw/dataset.csv'.
+Set {{output_file}} to '/data/processed/clean_data.csv'.
+
+Process the file {{input_file}} and save results to {{output_file}}.
+Update {{@pipeline_status}} to 'completed'.
+Save current timestamp to {{@last_run}}.
+```
+
+### Batch Processing Multiple Macro Files
+
+```python
+from nlm_interpreter import NLMSession
+from pathlib import Path
+
+session = NLMSession(namespace="batch_process")
+
+# Process all macro files in a directory
+macro_dir = Path("macros")
+for macro_file in macro_dir.glob("*.md"):
+    print(f"\nExecuting: {macro_file.name}")
+    
+    content = macro_file.read_text()
+    result = session.execute(content)
+    
+    # Log results
+    session.save(f"@last_macro", macro_file.name)
+    session.save(f"@last_result", result[:100])  # First 100 chars
+    
+print("\nAll macros executed successfully")
+print(f"Last macro: {session.get('@last_macro')}")
+```
+
 ## Command Line Usage
 
 ```bash
