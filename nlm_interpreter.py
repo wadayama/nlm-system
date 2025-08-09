@@ -24,23 +24,39 @@ class NLMSession:
     GLOBAL_PREFIX = "global"
     AT_PREFIX = "@"
     
-    def __init__(self, namespace=None, model=None, endpoint=None, api_key="ollama"):
+    def __init__(self, namespace=None, model=None, endpoint=None, api_key=None):
         """Initialize NLM session
         
         Args:
             namespace: Session namespace (auto-generated UUID if None)
-            model: OpenAI model name (uses default if None)
-            endpoint: API endpoint (uses default if None)  
-            api_key: API key (defaults to "ollama")
+            model: Model name - supports gpt-5, gpt-5-mini, gpt-5-nano, gpt-oss:20b (default)
+            endpoint: API endpoint (auto-determined by model)  
+            api_key: API key (auto-loaded for OpenAI models)
         """
         self.namespace = namespace or str(uuid.uuid4())[:8]
+        
+        # OpenAI models (gpt-5 series)
+        openai_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
+        
+        # Default model
         self.model = model or "gpt-oss:20b"
-        self.endpoint = endpoint or "http://localhost:1234/v1"  # LMStudio default for better performance
+        
+        if self.model in openai_models:
+            # OpenAI API configuration
+            self.endpoint = endpoint or "https://api.openai.com/v1"
+            self.api_key = api_key or self._load_openai_key()
+            print(f"🌐 Using OpenAI API: {self.model}")
+            self._show_openai_warning()
+        else:
+            # Local LLM configuration (gpt-oss:20b or others)
+            self.endpoint = endpoint or "http://localhost:1234/v1"  # LMStudio default
+            self.api_key = api_key or "ollama"
+            print(f"💻 Using local LLM: {self.model}")
         
         # Initialize OpenAI client
         self.client = OpenAI(
             base_url=self.endpoint,
-            api_key=api_key
+            api_key=self.api_key
         )
         
         # Initialize variable management
@@ -201,6 +217,53 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         """
         namespace, var_name = self._split_full_key(full_key)
         self.history_manager.log_change(namespace, var_name, old_value, new_value)
+
+    def _load_openai_key(self):
+        """Load OpenAI API key from file
+        
+        Returns:
+            str: OpenAI API key
+            
+        Raises:
+            ValueError: If API key file not found
+        """
+        from pathlib import Path
+        
+        # 1. Check current directory for .openai_key
+        local_key_file = Path(".openai_key")
+        if local_key_file.exists():
+            key = local_key_file.read_text().strip()
+            if key:
+                return key
+        
+        # 2. Check user config directory
+        config_dir = Path.home() / ".config" / "nlm"
+        global_key_file = config_dir / "openai_key"
+        if global_key_file.exists():
+            key = global_key_file.read_text().strip()
+            if key:
+                return key
+        
+        # Key not found
+        raise ValueError(
+            "OpenAI API key not found. Please create .openai_key file or "
+            "~/.config/nlm/openai_key with your API key. "
+            "Run 'python setup_openai.py' for setup assistance."
+        )
+
+    def _show_openai_warning(self):
+        """Show warning about OpenAI API usage and costs"""
+        model_costs = {
+            "gpt-5": "Premium tier",
+            "gpt-5-mini": "Standard tier", 
+            "gpt-5-nano": "Economy tier"
+        }
+        
+        cost_info = model_costs.get(self.model, "Standard tier")
+        print(f"⚠️  Using OpenAI API - {cost_info}")
+        print("   Charges will apply to your OpenAI account")
+        print(f"   Model: {self.model}")
+        print()
 
     def _resolve_variable_name(self, variable_name):
         """Resolve variable name with namespace (legacy method for backward compatibility)

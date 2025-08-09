@@ -206,18 +206,77 @@ python tests/test_at_prefix_api.py
 python tests/test_global_sharing.py
 ```
 
+## Model Support
+
+The NLM system supports 4 models with automatic provider switching based on model name:
+
+### 🌐 OpenAI Models (Requires API Key)
+- `gpt-5` - Most capable model (Premium tier)
+- `gpt-5-mini` - Balanced performance and cost (Standard tier) 
+- `gpt-5-nano` - Fast and economical (Economy tier)
+
+### 💻 Local Model (Default - No API charges)
+- `gpt-oss:20b` - Local LLM via LMStudio
+
+## OpenAI API Setup
+
+### First Time Setup
+```bash
+# Interactive setup assistant
+python setup_openai.py
+
+# Or check current setup
+python setup_openai.py check
+```
+
+### Manual Setup
+Create an API key file in one of these locations:
+```bash
+# Option 1: Project-specific (current directory)
+echo "sk-your-api-key-here" > .openai_key
+chmod 600 .openai_key
+
+# Option 2: User-wide configuration
+mkdir -p ~/.config/nlm
+echo "sk-your-api-key-here" > ~/.config/nlm/openai_key
+chmod 600 ~/.config/nlm/openai_key
+```
+
+Get your API key from: https://platform.openai.com/api-keys
+
+### Usage Examples
+
+```python
+from nlm_interpreter import NLMSession
+
+# Automatic provider selection based on model name
+session_openai = NLMSession(model="gpt-5-mini")  # Uses OpenAI API
+session_local = NLMSession()                     # Uses local LLM (default)
+
+# All models support the same API
+session_openai.execute("Save 'Hello OpenAI' to {{message}}")
+session_local.execute("Save 'Hello Local' to {{message}}")
+```
+
+### Command Line Usage with Models
+```bash
+# OpenAI models (requires API key)
+python nlm_interpreter.py -m gpt-5 "Save 'test' to {{var}}"
+python nlm_interpreter.py -m gpt-5-mini "{{name}}を表示してください"
+python nlm_interpreter.py -m gpt-5-nano "Quick task: {{task}}"
+
+# Local model (default - no API key needed)
+python nlm_interpreter.py "Save 'test' to {{var}}"
+python nlm_interpreter.py -m gpt-oss:20b "Save 'test' to {{var}}"
+```
+
 ## Configuration
 
-Default settings work out-of-the-box:
-- Model: `gpt-oss:20b`  
-- Endpoint: `http://localhost:1234/v1` (LMStudio)
+Default settings (no configuration needed):
+- Model: `gpt-oss:20b` (Local LLM via LMStudio)
+- Endpoint: `http://localhost:1234/v1` for local, auto-configured for OpenAI
 - Database: `variables.db`
-
-Optional environment variables (only if using different LLM setup):
-```bash
-export NLM_MODEL="llama3.1:8b"
-export NLM_ENDPOINT="http://localhost:11434/v1"  # For Ollama
-```
+- API Key: Auto-loaded from `.openai_key` file for OpenAI models
 
 ## Documentation
 

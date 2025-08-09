@@ -64,6 +64,12 @@ docs/.doctrees/
 .ipynb_checkpoints
 *.ipynb
 
+# API Keys - NEVER commit these
+.openai_key
+*.openai_key
+openai_key
+**/openai_key
+
 # LLM specific
 .ollama/
 .lmstudio/
