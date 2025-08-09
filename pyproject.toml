@@ -1,0 +1,10 @@
+[project]
+name = "nlm-system"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "openai>=1.99.5",
+    "pytest>=8.4.1",
+    "requests>=2.32.4",
+]

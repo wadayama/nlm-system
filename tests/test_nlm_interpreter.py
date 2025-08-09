@@ -53,21 +53,21 @@ def test_variable_namespace_resolution():
         # Test 1: Simple variable name (should get namespace)
         print("Test 1: Simple variable name resolution")
         resolved = session._resolve_variable_name("myvar")
-        expected = "test_ns.myvar"
+        expected = "test_ns:myvar"
         assert resolved == expected, f"Expected '{expected}', got '{resolved}'"
         print(f"✓ 'myvar' resolved to '{resolved}'")
         
         # Test 2: Variable with namespace (should not change)
         print("Test 2: Variable with namespace")
         resolved = session._resolve_variable_name("global.config")
-        expected = "global.config"
+        expected = "global:config"
         assert resolved == expected, f"Expected '{expected}', got '{resolved}'"
         print(f"✓ 'global.config' resolved to '{resolved}'")
         
         # Test 3: Another namespace
         print("Test 3: Other namespace")
         resolved = session._resolve_variable_name("other.data")
-        expected = "other.data"
+        expected = "other:data"
         assert resolved == expected, f"Expected '{expected}', got '{resolved}'"
         print(f"✓ 'other.data' resolved to '{resolved}'")
         
@@ -110,14 +110,14 @@ def test_tool_functions():
         # Test 3: List variables
         print("Test 3: List variables")
         result = session._list_variables_tool()
-        assert "tool_test.name" in result, f"Expected namespaced variable in result, got: {result}"
+        assert "tool_test:name" in result, f"Expected namespaced variable in result, got: {result}"
         assert "Alice" in result, f"Expected 'Alice' in result, got: {result}"
         print(f"✓ List result: {result}")
         
         # Test 4: Save global variable
         print("Test 4: Save global variable")
         result = session._save_variable_tool("global.config", "test_config")
-        assert "global.config" in result, f"Expected 'global.config' in result, got: {result}"
+        assert "global:config" in result, f"Expected 'global:config' in result, got: {result}"
         print(f"✓ Global save result: {result}")
         
         # Test 5: Get global variable
