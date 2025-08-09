@@ -265,6 +265,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         print(f"   Model: {self.model}")
         print()
 
+
     def _resolve_variable_name(self, variable_name):
         """Resolve variable name with namespace (legacy method for backward compatibility)
         
@@ -443,11 +444,11 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             all_results = []
             
             while turn < max_turns:
+                
                 response = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
-                    tools=self.TOOLS_DEFINITION,
-                    max_tokens=1000
+                    tools=self.TOOLS_DEFINITION
                 )
                 
                 message = response.choices[0].message
