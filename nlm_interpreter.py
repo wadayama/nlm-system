@@ -78,6 +78,12 @@ DECISION LOGIC:
 - If {{variable}} needs its value for processing → use get_variable first
 - When in doubt, analyze the intent: is the user setting or using the variable?
 
+MULTI-STEP OPERATIONS:
+- For complex operations requiring multiple steps, execute ALL necessary tools in sequence
+- Example: "Combine {{a}} and {{b}} and save to {{c}}" → get_variable("a"), get_variable("b"), then save_variable("c", combined_result)
+- Do not just describe the steps - EXECUTE them by calling the appropriate tools
+- Complete the entire operation before responding to the user
+
 RESPONSE FORMAT:
 - Always respond with clear, natural language
 - Explain what you did or any issues encountered
@@ -355,7 +361,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             return f"Error executing tool {function_name}: {str(e)}"
 
     def execute(self, macro_content):
-        """Execute natural language macro content
+        """Execute natural language macro content with multi-turn tool support
         
         Args:
             macro_content: String containing macro instructions
@@ -369,27 +375,45 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
                 {"role": "user", "content": f"Execute this macro:\n\n{macro_content}"}
             ]
             
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                tools=self.TOOLS_DEFINITION,
-                max_tokens=1000
-            )
+            max_turns = 5  # Prevent infinite loops
+            turn = 0
+            all_results = []
             
-            message = response.choices[0].message
-            result_parts = []
+            while turn < max_turns:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    tools=self.TOOLS_DEFINITION,
+                    max_tokens=1000
+                )
+                
+                message = response.choices[0].message
+                
+                # Handle tool calls
+                if message.tool_calls:
+                    tool_results = []
+                    for tool_call in message.tool_calls:
+                        tool_result = self._execute_tool_call(tool_call)
+                        tool_results.append({
+                            "tool_call_id": tool_call.id,
+                            "role": "tool",
+                            "content": tool_result
+                        })
+                        all_results.append(tool_result)
+                    
+                    # Add assistant message and tool results to conversation
+                    messages.append({"role": "assistant", "content": message.content, "tool_calls": message.tool_calls})
+                    messages.extend(tool_results)
+                    
+                    turn += 1
+                    continue
+                else:
+                    # No more tool calls, add final response
+                    if message.content:
+                        all_results.append(message.content)
+                    break
             
-            # Handle tool calls
-            if message.tool_calls:
-                for tool_call in message.tool_calls:
-                    tool_result = self._execute_tool_call(tool_call)
-                    result_parts.append(tool_result)
-            
-            # Add assistant response
-            if message.content:
-                result_parts.append(message.content)
-            
-            return "\n".join(result_parts) if result_parts else "Macro executed (no output)"
+            return "\n".join(all_results) if all_results else "Macro executed (no output)"
             
         except json.JSONDecodeError as e:
             return f"Error parsing tool arguments: {str(e)}"
