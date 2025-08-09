@@ -48,27 +48,35 @@ class NLMSession:
         self.history_manager = VariableHistoryManager("variables.db")
         
         # System prompt for natural language macro execution
-        self.system_prompt = """You are a natural language macro interpreter.
+        self.system_prompt = """You are a natural language macro interpreter that processes {{variable}} syntax.
 
 VARIABLE SYNTAX RULES:
-1. Session variables: {{variable_name}} - stored in current session namespace
+1. Session variables: {{variable_name}} - stored in current session namespace  
 2. Global variables: {{@variable_name}} - stored globally, accessible by all sessions
 3. Other session variables: {{session_name.variable}} - access variables from other sessions
 
-IMPORTANT SYNTAX EXAMPLES:
-- Save 'value' to {{@config}} → save_variable("@config", "value") for global variable
-- Save 'data' to {{local_var}} → save_variable("local_var", "value") for session variable  
-- Get {{@environment}} → get_variable("@environment") for global variable
-- Get {{other_session.data}} → get_variable("other_session.data") for cross-session access
+CRITICAL: Variables are NOT pre-expanded. You receive raw {{variable}} syntax and must decide whether to read or write.
 
-TOOL USAGE RULES:
-1. When user says "Save X to {{@var}}", use save_variable tool with name="@var" and value="X"
-2. When user says "Save X to {{var}}", use save_variable tool with name="var" and value="X"
-3. When user says "Get {{@var}}" or mentions {{@var}}, use get_variable tool with name="@var"
-4. When user says "Get {{var}}" or mentions {{var}}, use get_variable tool with name="var"
-5. When user says "Delete {{@var}}" or "Delete {{var}}", use delete_variable tool appropriately
-6. When user says "Delete all variables" or "Clear all variables", use delete_all_variables tool
-7. When user says "List variables", use list_variables tool
+VARIABLE USAGE PATTERNS:
+1. **Variable Assignment/Update**:
+   - "{{name}} is Alice" → save_variable("name", "Alice")
+   - "Save X to {{var}}" → save_variable("var", "X")  
+   - "Set {{@status}} to ready" → save_variable("@status", "ready")
+   - "Update {{counter}} to 10" → save_variable("counter", "10")
+
+2. **Variable Reference/Reading**:
+   - "Show me {{name}}" → get_variable("name") first, then respond
+   - "Print {{@config}}" → get_variable("@config") first, then display
+   - "If {{status}} is ready, then..." → get_variable("status") first to check
+
+3. **Mixed Operations**:
+   - "Add 5 to {{counter}}" → get_variable("counter"), calculate, then save_variable("counter", new_value)
+   - "Change {{name}} from Alice to Bob" → save_variable("name", "Bob")
+
+DECISION LOGIC:
+- If {{variable}} appears in assignment context → use save_variable
+- If {{variable}} needs its value for processing → use get_variable first
+- When in doubt, analyze the intent: is the user setting or using the variable?
 
 RESPONSE FORMAT:
 - Always respond with clear, natural language
@@ -215,6 +223,10 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
     def _expand_variables(self, text):
         """Expand {{variable}} and {{@variable}} references in text
         
+        NOTE: This method is kept for testing purposes and backward compatibility.
+        It is NOT used in the main execution flow since we now pass raw {{variable}}
+        syntax directly to the LLM for proper context-aware processing.
+        
         Args:
             text: Text containing {{variable}} and {{@variable}} references
             
@@ -351,13 +363,10 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         Returns:
             String result from macro execution
         """
-        try:
-            # First expand any existing variables in the macro content
-            expanded_content = self._expand_variables(macro_content)
-            
+        try:            
             messages = [
                 {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": f"Execute this macro:\n\n{expanded_content}"}
+                {"role": "user", "content": f"Execute this macro:\n\n{macro_content}"}
             ]
             
             response = self.client.chat.completions.create(
