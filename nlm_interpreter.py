@@ -445,11 +445,25 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             
             while turn < max_turns:
                 
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    tools=self.TOOLS_DEFINITION
-                )
+                # Build request parameters
+                request_params = {
+                    "model": self.model,
+                    "messages": messages,
+                    "tools": self.TOOLS_DEFINITION
+                }
+                
+                # Add reasoning_effort and verbosity for all models to improve latency
+                # Works for both OpenAI models and local models (LMStudio/Ollama)
+                # 'low' provides good balance between speed and quality
+                request_params["reasoning_effort"] = "low"
+                
+                # Add verbosity to reduce response length and improve latency
+                # OpenAI models support this parameter
+                openai_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
+                if self.model in openai_models:
+                    request_params["verbosity"] = "low"
+                
+                response = self.client.chat.completions.create(**request_params)
                 
                 message = response.choices[0].message
                 
