@@ -5,41 +5,41 @@ from nlm_interpreter import NLMSession
 from variable_db import VariableDB
 
 print("="*60)
-print("6. 不正構文の回復テスト（LLM不要）")
+print("6. Malformed syntax recovery test (No LLM needed)")
 print("="*60)
 
-# NLMSessionを使うことでデータベースが適切に初期化される
+# Using NLMSession ensures proper database initialization
 session = NLMSession(namespace="edge_test")
-db = session.db  # 初期化済みのデータベースを使用
+db = session.db  # Use initialized database
 
-# Case 1: 特殊文字を含む変数名
-print("\nCase 1: 特殊文字を含む変数名（DBレベル）")
+# Case 1: Variable names with special characters
+print("\nCase 1: Variable names with special characters (DB level)")
 try:
     db.save_variable("test-with-dashes", "value1")
     value = db.get_variable("test-with-dashes")
-    print(f"✅ ダッシュ付き変数名: {value}")
+    print(f"✅ Variable name with dashes: {value}")
 except Exception as e:
-    print(f"❌ エラー: {e}")
+    print(f"❌ Error: {e}")
 
 try:
     db.save_variable("test.with.dots", "value2")
     value = db.get_variable("test.with.dots")
-    print(f"✅ ドット付き変数名: {value}")
+    print(f"✅ Variable name with dots: {value}")
 except Exception as e:
-    print(f"❌ エラー: {e}")
+    print(f"❌ Error: {e}")
 
-# Case 2: 非常に長い変数名
-print("\nCase 2: 長い変数名")
+# Case 2: Very long variable names
+print("\nCase 2: Long variable names")
 long_name = "very_" * 50 + "long_name"
 try:
     db.save_variable(long_name, "value3")
     value = db.get_variable(long_name)
-    print(f"✅ {len(long_name)}文字の変数名: OK")
+    print(f"✅ Variable name with {len(long_name)} characters: OK")
 except Exception as e:
-    print(f"❌ エラー: {e}")
+    print(f"❌ Error: {e}")
 
-# Case 3: Unicode文字
-print("\nCase 3: Unicode変数名")
+# Case 3: Unicode characters
+print("\nCase 3: Unicode variable names")
 unicode_names = ["😀emoji", "日本語", "العربية", "🔥fire🔥"]
 for name in unicode_names:
     try:
@@ -49,8 +49,8 @@ for name in unicode_names:
     except Exception as e:
         print(f"❌ {name}: {e}")
 
-# Case 4: 空文字列や特殊値
-print("\nCase 4: 特殊値")
+# Case 4: Empty strings and special values
+print("\nCase 4: Special values")
 special_values = [
     ("empty", ""),
     ("spaces", "   "),
@@ -65,9 +65,9 @@ for name, value in special_values:
         db.save_variable(f"special_{name}", value)
         retrieved = db.get_variable(f"special_{name}")
         if retrieved == value:
-            print(f"✅ {name}: 正しく保存・取得")
+            print(f"✅ {name}: Correctly saved and retrieved")
         else:
-            print(f"🤔 {name}: 値が変わった")
+            print(f"🤔 {name}: Value changed")
     except Exception as e:
         print(f"❌ {name}: {e}")
 

@@ -1,142 +1,142 @@
-# マルチエージェントシステム ユーザーガイド
+# Multi-Agent System User Guide
 
-## 📖 概要
+## 📖 Overview
 
-NLMシステムのマルチエージェント機能は、複数のエージェントを協調して動作させることで、複雑なタスクを効率的に処理できます。各エージェントは独立したNLMセッション（名前空間）を持ち、グローバル変数を通じて通信・協調します。
+The NLM system's multi-agent functionality enables efficient processing of complex tasks through coordinated operation of multiple agents. Each agent has its own independent NLM session (namespace) and communicates/coordinates through global variables.
 
-## 🚀 クイックスタート
+## 🚀 Quick Start
 
-### 基本的な使用方法
+### Basic Usage
 
 ```python
 from multi_agent_system import MultiAgentSystem
 from agent_examples import DataCollectorAgent, ResearchAgent
 
-# システム作成
+# Create system
 system = MultiAgentSystem("my_project")
 
-# エージェント作成・追加
+# Create and add agents
 collector = DataCollectorAgent("collector1", "database_source")
 researcher = ResearchAgent("researcher1", "AI trends")
 
 system.add_agent(collector)
 system.add_agent(researcher)
 
-# 順次実行
+# Sequential execution
 results = system.run_sequential()
-print(f"実行結果: {results['successful']}件成功, {results['failed']}件失敗")
+print(f"Results: {results['successful']} successful, {results['failed']} failed")
 ```
 
-## 🔧 エージェントタイプ
+## 🔧 Agent Types
 
-### 1. DataCollectorAgent（データ収集エージェント）
-一回実行型。指定されたソースからデータを収集して完了します。
+### 1. DataCollectorAgent (Data Collection Agent)
+One-time execution type. Collects data from specified source and completes.
 
 ```python
 from agent_examples import DataCollectorAgent
 
-# データ収集エージェント作成
+# Create data collection agent
 collector = DataCollectorAgent(
     agent_id="collector_1",
-    data_source="顧客データベース"
+    data_source="customer_database"
 )
 
-# 単独実行
+# Execute independently
 result = collector.run()
 ```
 
-**用途**: 
-- データベースからの情報取得
-- APIからのデータ収集
-- ファイル処理
+**Use Cases**: 
+- Information retrieval from databases
+- Data collection from APIs
+- File processing
 
-### 2. MonitorAgent（監視エージェント）
-継続実行型。定期的にシステムを監視し、異常を検出します。
+### 2. MonitorAgent (Monitoring Agent)
+Continuous execution type. Periodically monitors systems and detects anomalies.
 
 ```python
 from agent_examples import MonitorAgent
 
-# 監視エージェント作成（5秒間隔）
+# Create monitoring agent (5-second interval)
 monitor = MonitorAgent(
     agent_id="monitor_1",
     check_interval=5.0
 )
 
-# バックグラウンドで実行
+# Execute in background
 import threading
 monitor_thread = threading.Thread(target=monitor.run)
 monitor_thread.start()
 
-# 停止する場合
+# To stop monitoring
 monitor.session.save("stop_monitoring", "true")
 ```
 
-**用途**:
-- システム監視
-- リソース使用量チェック
-- ログ監視
+**Use Cases**:
+- System monitoring
+- Resource usage checking
+- Log monitoring
 
-### 3. ResearchAgent（研究エージェント）
-段階実行型。複数のフェーズを経て研究タスクを実行します。
+### 3. ResearchAgent (Research Agent)
+Phased execution type. Executes research tasks through multiple phases.
 
 ```python
 from agent_examples import ResearchAgent
 
-# 研究エージェント作成
+# Create research agent
 researcher = ResearchAgent(
     agent_id="researcher_1",
-    research_topic="機械学習の最新動向"
+    research_topic="latest_trends_in_machine_learning"
 )
 
-# 5段階で実行（文献調査→データ収集→分析→統合→報告）
+# Execute in 5 phases (literature review → data collection → analysis → integration → report)
 result = researcher.run()
 
-# 最終レポート取得
+# Get final report
 final_report = researcher.session.get("final_report")
 ```
 
-**研究フェーズ**:
-1. 文献調査 (literature_review)
-2. データ収集 (data_collection)
-3. 分析 (analysis)
-4. 統合 (synthesis)
-5. 報告 (reporting)
+**Research Phases**:
+1. Literature Review (literature_review)
+2. Data Collection (data_collection)
+3. Analysis (analysis)
+4. Synthesis (synthesis)
+5. Reporting (reporting)
 
-### 4. CoordinatorAgent（調整エージェント）
-他のエージェントを調整・管理するエージェントです。
+### 4. CoordinatorAgent (Coordinator Agent)
+An agent that coordinates and manages other agents.
 
 ```python
 from agent_examples import CoordinatorAgent
 
-# 調整エージェント作成
+# Create coordinator agent
 coordinator = CoordinatorAgent(
     agent_id="coordinator_1",
     team_agents=["collector_1", "researcher_1", "monitor_1"]
 )
 
-# チーム調整開始
+# Start team coordination
 coordinator.run()
 ```
 
-**機能**:
-- チームメンバーの状態監視
-- タスク割り当て
-- アラート処理
-- 進捗管理
+**Functions**:
+- Monitor team member status
+- Task assignment
+- Alert handling
+- Progress management
 
-## 🎯 実行モード
+## 🎯 Execution Modes
 
-### 1. 順次実行 (Sequential)
-エージェントを一つずつ順番に実行します。
+### 1. Sequential Execution
+Executes agents one by one in order.
 
 ```python
-# 安全で予測可能な実行
+# Safe and predictable execution
 results = system.run_sequential()
 ```
 
-**特徴**:
-- エラーが発生しても他のエージェントは実行される
-- 実行順序が保証される
+**Features**:
+- Other agents continue execution even if errors occur
+- Execution order is guaranteed
 - デバッグが容易
 
 ### 2. 並列実行 (Parallel)

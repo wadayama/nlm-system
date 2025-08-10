@@ -19,7 +19,7 @@ def test_basic_concatenation():
     
     # Test 1: Simple concatenation
     print("Test 1: Simple concatenation")
-    result = session.execute("{{first}}と{{second}}を結合して{{result}}に保存してください")
+    result = session.execute("Combine {{first}} and {{second}} and save to {{result}}")
     stored_value = session.get("result")
     expected = "HelloWorld"
     assert stored_value == expected, f"Expected '{expected}', got '{stored_value}'"
@@ -56,7 +56,7 @@ def test_arithmetic_operations():
     
     # Test 1: Addition
     print("Test 1: Addition of two numbers")
-    result = session.execute("{{num1}}と{{num2}}を足し算して{{sum}}に保存してください")
+    result = session.execute("Add {{num1}} and {{num2}} and save to {{sum}}")
     stored_value = session.get("sum")
     expected = "35"
     assert stored_value == expected, f"Expected '{expected}', got '{stored_value}'"
@@ -64,7 +64,7 @@ def test_arithmetic_operations():
     
     # Test 2: Subtraction  
     print("Test 2: Subtraction")
-    result = session.execute("{{num2}}から{{num1}}を引いて{{diff}}に保存してください")
+    result = session.execute("Subtract {{num1}} from {{num2}} and save to {{diff}}")
     stored_value = session.get("diff")
     expected = "15"
     assert stored_value == expected, f"Expected '{expected}', got '{stored_value}'"
@@ -72,7 +72,7 @@ def test_arithmetic_operations():
     
     # Test 3: Three number operation
     print("Test 3: Three number operation")
-    result = session.execute("{{num1}}、{{num2}}、{{num3}}を全て足して{{total}}に保存してください")
+    result = session.execute("Add {{num1}}, {{num2}}, and {{num3}} together and save to {{total}}")
     stored_value = session.get("total")
     expected = "40"  # 10 + 25 + 5
     assert stored_value == expected, f"Expected '{expected}', got '{stored_value}'"
@@ -93,7 +93,7 @@ def test_conditional_operations():
     
     # Test 1: Simple conditional
     print("Test 1: Simple conditional update")
-    result = session.execute("{{status1}}がpendingなら{{target_status}}に変更して{{new_status}}に保存してください")
+    result = session.execute("If {{status1}} is pending, change to {{target_status}} and save to {{new_status}}")
     stored_value = session.get("new_status")
     expected = "completed"
     assert stored_value == expected, f"Expected '{expected}', got '{stored_value}'"
@@ -101,7 +101,7 @@ def test_conditional_operations():
     
     # Test 2: Comparison between variables
     print("Test 2: Variable comparison")
-    result = session.execute("{{status1}}と{{status2}}が同じかチェックして、結果を{{comparison}}に保存してください")
+    result = session.execute("Check if {{status1}} and {{status2}} are the same and save the result to {{comparison}}")
     stored_value = session.get("comparison")
     assert stored_value is not None, "Comparison result should be stored"
     print(f"✓ {stored_value}")
@@ -122,7 +122,7 @@ def test_template_operations():
     
     # Test 1: URL building
     print("Test 1: URL construction")
-    result = session.execute("{{base_url}}/{{version}}{{endpoint}}/{{user_id}}の形式でURLを作って{{full_url}}に保存してください")
+    result = session.execute("Create URL in format {{base_url}}/{{version}}{{endpoint}}/{{user_id}} and save to {{full_url}}")
     stored_value = session.get("full_url")
     expected = "https://api.example.com/v1/users/123"
     assert stored_value == expected, f"Expected '{expected}', got '{stored_value}'"
@@ -133,7 +133,7 @@ def test_template_operations():
     session.save("user_name", "Alice")
     session.save("action", "login")
     session.save("timestamp", "2024-01-15")
-    result = session.execute("'User {{user_name}} performed {{action}} on {{timestamp}}'という形式でメッセージを作成して{{log_message}}に保存してください")
+    result = session.execute("Create message in format 'User {{user_name}} performed {{action}} on {{timestamp}}' and save to {{log_message}}")
     stored_value = session.get("log_message")
     assert "Alice" in stored_value and "login" in stored_value and "2024-01-15" in stored_value
     print(f"✓ {stored_value}")
@@ -154,7 +154,7 @@ def test_global_and_local_mix():
     
     # Test 1: Mix local and global in session1
     print("Test 1: Local + Global combination")
-    result = session1.execute("{{local_data}}と{{@global_prefix}}を結合して{{@combined}}に保存してください")
+    result = session1.execute("Combine {{local_data}} and {{@global_prefix}} and save to {{@combined}}")
     global_result = session1.get("@combined")
     expected = "SessionDataGLOBAL"
     assert global_result == expected, f"Expected '{expected}', got '{global_result}'"
@@ -162,7 +162,7 @@ def test_global_and_local_mix():
     
     # Test 2: Access from different session
     print("Test 2: Cross-session global access")
-    result = session2.execute("{{@combined}}と{{@global_suffix}}を結合して{{@final}}に保存してください")
+    result = session2.execute("Combine {{@combined}} and {{@global_suffix}} and save to {{@final}}")
     final_result = session2.get("@final")
     expected = "SessionDataGLOBALEND"
     assert final_result == expected, f"Expected '{expected}', got '{final_result}'"
@@ -183,7 +183,7 @@ def test_complex_chaining():
     
     # Test 1: Multi-step processing chain
     print("Test 1: Multi-step processing chain")
-    result = session.execute("{{input1}}、{{input2}}、{{input3}}をカンマ区切りで結合して{{list}}に保存し、さらにその結果を大文字にして{{upper_list}}に保存してください")
+    result = session.execute("Combine {{input1}}, {{input2}}, {{input3}} with commas and save to {{list}}, then convert the result to uppercase and save to {{upper_list}}")
     
     list_result = session.get("list")
     upper_result = session.get("upper_list")
@@ -211,7 +211,7 @@ def test_error_handling():
     
     # Test 1: Missing variable handling
     print("Test 1: Missing variable handling")
-    result = session.execute("{{existing}}と{{missing}}を結合して{{partial_result}}に保存してください")
+    result = session.execute("Combine {{existing}} and {{missing}} and save to {{partial_result}}")
     partial_result = session.get("partial_result")
     
     # Should handle gracefully - either skip or provide default
@@ -220,7 +220,7 @@ def test_error_handling():
     # Test 2: Empty variable handling
     print("Test 2: Empty variable handling")
     session.save("empty", "")
-    result = session.execute("{{existing}}と{{empty}}を結合して{{empty_result}}に保存してください")
+    result = session.execute("Combine {{existing}} and {{empty}} and save to {{empty_result}}")
     empty_result = session.get("empty_result")
     
     assert "value" in str(empty_result), "Should handle empty variables gracefully"

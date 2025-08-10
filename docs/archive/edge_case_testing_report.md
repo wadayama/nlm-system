@@ -1,71 +1,71 @@
 # NLM System Edge Case Testing Report
 
-## 概要
+## Overview
 
-このレポートは、NLMシステムにおける様々なLLMモデルのエッジケース処理性能を詳細に分析した結果をまとめています。テストは2025年8月に MacBook Air 環境で実施されました。
+This report summarizes detailed analysis results of edge case processing performance for various LLM models in the NLM system. Tests were conducted in August 2025 on MacBook Air environment.
 
-## 実行環境
+## Execution Environment
 
-- **マシン**: MacBook Air (2025年8月)
+- **Machine**: MacBook Air (August 2025)
 - **OS**: macOS
-- **NLMシステム**: reasoning_effort='low' + verbosity='low' 最適化済み
-- **テスト対象モデル**:
+- **NLM System**: Optimized with reasoning_effort='low' + verbosity='low'
+- **Tested Models**:
   - gpt-5-mini (OpenAI Standard tier)
   - gpt-5-nano (OpenAI Economy tier) 
   - gpt-oss:20b (Local LMStudio)
 
-## テスト方法論
+## Test Methodology
 
-### テスト項目
+### Test Categories
 
-1. **あいまいな変数参照**
-   - 変数名が文中に出現する場合の処理
-   - ネストした変数構文の処理
+1. **Ambiguous Variable References**
+   - Processing when variable names appear within text
+   - Nested variable syntax handling
 
-2. **自己参照操作**
-   - カウンター増分処理
-   - 変数スワップ操作
+2. **Self-Reference Operations**
+   - Counter increment processing
+   - Variable swap operations
 
-3. **自然言語の複雑さ**
-   - 同音異義語の処理
-   - 複雑な条件分岐処理
+3. **Natural Language Complexity**
+   - Homophone processing
+   - Complex conditional branch processing
 
-4. **数学的操作**
-   - 複雑な計算式の処理
+4. **Mathematical Operations**
+   - Complex formula processing
 
-5. **極端なケース**
-   - 空の変数名
-   - Unicode変数 (🚀, 日本語)
-   - 長い変数名
+5. **Extreme Cases**
+   - Empty variable names
+   - Unicode variables (🚀, Japanese)
+   - Long variable names
 
-### 評価指標
+### Evaluation Metrics
 
-- **成功率**: テスト項目に対する成功の割合
-- **平均実行時間**: 成功したテストの平均実行時間
-- **品質評価**: 期待される結果との一致度
+- **Success Rate**: Percentage of successful test items
+- **Average Execution Time**: Mean execution time for successful tests
+- **Quality Assessment**: Degree of match with expected results
 
-## テスト結果
+## Test Results
 
-### 1. GPT-5-MINI vs GPT-5-NANO 比較
+### 1. GPT-5-MINI vs GPT-5-NANO Comparison
 
-| モデル | 成功率 | 平均時間 | 品質評価 | 総合評価 |
-|--------|--------|----------|----------|----------|
-| **gpt-5-mini** | **88.9%** | **5.3秒** | 🎯 優秀 | **🥇 最優秀** |
-| **gpt-5-nano** | 100.0% | 7.1秒 | 🎯 優秀 | 🥈 優秀 |
+| Model | Success Rate | Avg Time | Quality Rating | Overall Rating |
+|--------|--------------|----------|----------------|----------------|
+| **gpt-5-mini** | **88.9%** | **5.3sec** | 🎯 Excellent | **🥇 Best** |
+| **gpt-5-nano** | 100.0% | 7.1sec | 🎯 Excellent | 🥈 Excellent |
 
-#### 詳細分析
+#### Detailed Analysis
 
-**GPT-5-MINI の特徴:**
-- 実用的な成功率 (88.9%) で日常使用に適している
-- 25%高速な処理速度
-- コスト効率が良好 (Standard tier)
-- エッジケースでの安定性
+**GPT-5-MINI Characteristics:**
+- Practical success rate (88.9%) suitable for daily use
+- 25% faster processing speed
+- Good cost efficiency (Standard tier)
+- Stability in edge cases
 
-**GPT-5-NANO の特徴:**
-- 完璧な成功率 (100%) 
-- 条件分岐処理に優位性
-- Unicode対応が完璧
-- 若干の速度トレードオフあり
+**GPT-5-NANO Characteristics:**
+- Perfect success rate (100%)
+- Superior in conditional branch processing
+- Perfect Unicode support
+- Slight speed tradeoff
 
 ### 2. ローカル vs OpenAI比較
 

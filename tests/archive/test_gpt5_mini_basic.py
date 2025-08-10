@@ -22,7 +22,7 @@ def test_basic_functionality():
         "variable_listing": False
     }
     
-    # Test 1: セッション作成
+    # Test 1: Session creation
     try:
         print(f"\n📊 Session Info:")
         print(f"   Model: {session.model}")
@@ -34,7 +34,7 @@ def test_basic_functionality():
         print(f"   ❌ Session creation failed: {e}")
         return results
     
-    # Test 2: Python API機能
+    # Test 2: Python API functionality
     try:
         print(f"\n🔧 Python API Test:")
         session.save("test_var", "hello")
@@ -47,7 +47,7 @@ def test_basic_functionality():
     except Exception as e:
         print(f"   ❌ Python API failed: {e}")
     
-    # Test 3: グローバル変数
+    # Test 3: Global variables
     try:
         print(f"\n🌐 Global Variables Test:")
         session.save("@global_test", "global_value")
@@ -60,7 +60,7 @@ def test_basic_functionality():
     except Exception as e:
         print(f"   ❌ Global variables failed: {e}")
     
-    # Test 4: 日本語変数名
+    # Test 4: Japanese variable names
     try:
         print(f"\n🇯🇵 Japanese Variables Test:")
         session.save("名前", "田中")
@@ -75,7 +75,7 @@ def test_basic_functionality():
     except Exception as e:
         print(f"   ❌ Japanese variables failed: {e}")
     
-    # Test 5: 変数一覧
+    # Test 5: Variable listing
     try:
         print(f"\n📋 Variable Listing Test:")
         local_vars = session.list_local()
@@ -90,7 +90,7 @@ def test_basic_functionality():
     except Exception as e:
         print(f"   ❌ Variable listing failed: {e}")
     
-    # Test 6: LLM実行機能 (API制限時はスキップ)
+    # Test 6: LLM execution functionality (skip if API limited)
     try:
         print(f"\n🤖 LLM Execution Test:")
         print("   Testing simple variable assignment...")

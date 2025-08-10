@@ -1,33 +1,33 @@
-# NLM標準プロンプト書法ガイド
+# NLM Standard Prompt Writing Guide
 
-## 概要
+## Overview
 
-NLMシステムにおける自然言語マクロプロンプトの標準的な書き方を定義します。この書法により、プロンプトの可読性、保守性、一貫性が向上します。
+This guide defines standard writing conventions for natural language macro prompts in the NLM system. These conventions improve prompt readability, maintainability, and consistency.
 
-## 基本構造
+## Basic Structure
 
-### テンプレート
+### Template
 
 ```python
 prompt = """
-# [メインタスク名]
+# [Main Task Name]
 
-[タスクの簡潔な説明]
+[Brief task description]
 
-## [セクション名1]
-[セクションの内容]
+## [Section Name 1]
+[Section content]
 
-## [セクション名2] 
-[セクションの内容]
+## [Section Name 2] 
+[Section content]
 
 ## Output
-[出力形式の指定]
+[Output format specification]
 """.strip()
 ```
 
-### 必須要素
+### Required Elements
 
-1. **メイン見出し (`#`)** - タスク名を明確に示す
+1. **Main Heading (`#`)** - Clearly indicate the task name
 2. **セクション見出し (`##`)** - 論理的な区分け
 3. **`.strip()`** - 先頭・末尾の余分な空白除去
 4. **適切なインデント** - 視覚的階層構造

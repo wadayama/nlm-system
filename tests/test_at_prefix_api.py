@@ -27,13 +27,13 @@ def test_at_prefix_api():
     print("-" * 50)
     
     print("# Local variables (no @)")
-    key1 = session1.save("task", "データ収集")
+    key1 = session1.save("task", "data_collection")
     key2 = session1.save("progress", "75%")
-    key3 = session1.save("status", "実行中")
+    key3 = session1.save("status", "running")
     
-    print(f"session1.save('task', 'データ収集') → {key1}")
+    print(f"session1.save('task', 'data_collection') → {key1}")
     print(f"session1.save('progress', '75%') → {key2}")
-    print(f"session1.save('status', '実行中') → {key3}")
+    print(f"session1.save('status', 'running') → {key3}")
     
     print("\n# Global variables (with @)")
     global1 = session1.save("@project_name", "AI Research 2024")

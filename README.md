@@ -167,7 +167,7 @@ print(f"Results: {results['successful']} successful, {results['failed']} failed"
 - `ResearchAgent`: Multi-phase research workflow
 - `CoordinatorAgent`: Team management and coordination
 
-For detailed multi-agent usage, see [docs/multi_agent_user_guide.md](docs/multi_agent_user_guide.md)
+For detailed multi-agent usage, see [docs/multi_agent_guide.md](docs/multi_agent_guide.md)
 
 ## Executing Multi-line Macro Files
 
@@ -234,25 +234,25 @@ print(f"Last macro: {session.get('@last_macro')}")
 
 ```bash
 # Execute natural language macros
-python nlm_interpreter.py "Save 'production' to {{@environment}}"
+uv run nlm_interpreter.py "Save 'production' to {{@environment}}"
 
 # Execute from file
-python nlm_interpreter.py -f macros/workflow.md
+uv run nlm_interpreter.py -f macros/workflow.md
 
 # Custom model/endpoint
-python nlm_interpreter.py -m llama3.1:8b -e http://localhost:11434/v1 "Save today to {{@date}}"
+uv run nlm_interpreter.py -m llama3.1:8b -e http://localhost:11434/v1 "Save today to {{@date}}"
 ```
 
 ## Helper Tools
 
 ```bash
 # Real-time variable monitoring
-python watch_variables.py
+uv run watch_variables.py
 
 # View variable change history
-python history_viewer.py recent --hours 24
-python history_viewer.py stats
-python history_viewer.py export history.json -f json
+uv run history_viewer.py recent --hours 24
+uv run history_viewer.py stats
+uv run history_viewer.py export history.json -f json
 ```
 
 ## Variable History Logging
@@ -296,10 +296,10 @@ class NLMSession:
 
 ```bash
 # Run core tests
-python tests/test_nlm_interpreter.py
-python tests/test_variable_db_basic.py
-python tests/test_at_prefix_api.py
-python tests/test_global_sharing.py
+uv run tests/test_nlm_interpreter.py
+uv run tests/test_variable_db_basic.py
+uv run tests/test_at_prefix_api.py
+uv run tests/test_global_sharing.py
 ```
 
 ## Model Support
@@ -319,10 +319,10 @@ The NLM system supports 4 models with automatic provider switching based on mode
 ### First Time Setup
 ```bash
 # Interactive setup assistant
-python setup_openai.py
+uv run setup_openai.py
 
 # Or check current setup
-python setup_openai.py check
+uv run setup_openai.py check
 ```
 
 ### Manual Setup
@@ -357,13 +357,13 @@ session_local.execute("Save 'Hello Local' to {{message}}")
 ### Command Line Usage with Models
 ```bash
 # OpenAI models (requires API key)
-python nlm_interpreter.py -m gpt-5 "Save 'test' to {{var}}"
-python nlm_interpreter.py -m gpt-5-mini "{{name}}を表示してください"
-python nlm_interpreter.py -m gpt-5-nano "Quick task: {{task}}"
+uv run nlm_interpreter.py -m gpt-5 "Save 'test' to {{var}}"
+uv run nlm_interpreter.py -m gpt-5-mini "Process {{task}}"
+uv run nlm_interpreter.py -m gpt-5-nano "Quick task: {{task}}"
 
 # Local model (default - no API key needed)
-python nlm_interpreter.py "Save 'test' to {{var}}"
-python nlm_interpreter.py -m gpt-oss:20b "Save 'test' to {{var}}"
+uv run nlm_interpreter.py "Save 'test' to {{var}}"
+uv run nlm_interpreter.py -m gpt-oss:20b "Save 'test' to {{var}}"
 ```
 
 ## Configuration
@@ -376,14 +376,20 @@ Default settings (no configuration needed):
 
 ## Documentation
 
-For detailed documentation including:
-- Advanced usage examples
-- Multi-agent architecture patterns
-- Batch macro file execution
-- History viewer usage
-- System architecture details
+### 📚 Complete Documentation
 
-See [docs/detailed_documentation.md](docs/detailed_documentation.md)
+- **[User Guide](docs/user_guide.md)** - Comprehensive usage guide with examples
+- **[API Reference](docs/api_reference.md)** - Complete API documentation for developers
+- **[Multi-Agent Guide](docs/multi_agent_guide.md)** - Multi-agent system patterns and usage
+- **[Test Overview](tests/TEST_OVERVIEW.md)** - Test suite organization and priority guide
+- **[Prompt Standards](docs/prompt_standards.md)** - Standard prompt writing conventions
+
+### 📋 Quick References
+
+- **Core Classes**: `NLMSession`, `SystemSession`, `BaseAgent`, `MultiAgentSystem`
+- **Variable Syntax**: `{{variable}}` for macros, `@prefix` for global variables
+- **Test Commands**: Use `uv run` for all Python script execution
+- **Models**: `gpt-5`, `gpt-5-mini`, `gpt-5-nano` (OpenAI), `gpt-oss:20b` (Local)
 
 ## Requirements
 

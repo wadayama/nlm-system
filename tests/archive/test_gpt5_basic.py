@@ -22,7 +22,7 @@ def test_basic_functionality():
         "variable_listing": False
     }
     
-    # Test 1: セッション作成
+    # Test 1: Session creation
     try:
         print(f"\n📊 Session Info:")
         print(f"   Model: {session.model}")
@@ -34,7 +34,7 @@ def test_basic_functionality():
         print(f"   ❌ Session creation failed: {e}")
         return results
     
-    # Test 2: Python API機能
+    # Test 2: Python API functionality
     try:
         print(f"\n🔧 Python API Test:")
         session.save("test_var", "hello")
@@ -47,7 +47,7 @@ def test_basic_functionality():
     except Exception as e:
         print(f"   ❌ Python API failed: {e}")
     
-    # Test 3: グローバル変数
+    # Test 3: Global variables
     try:
         print(f"\n🌐 Global Variables Test:")
         session.save("@global_test_gpt5", "global_value_gpt5")
@@ -60,7 +60,7 @@ def test_basic_functionality():
     except Exception as e:
         print(f"   ❌ Global variables failed: {e}")
     
-    # Test 4: 日本語変数名
+    # Test 4: Japanese variable names
     try:
         print(f"\n🇯🇵 Japanese Variables Test:")
         session.save("名前_gpt5", "佐藤")
@@ -75,7 +75,7 @@ def test_basic_functionality():
     except Exception as e:
         print(f"   ❌ Japanese variables failed: {e}")
     
-    # Test 5: 変数一覧
+    # Test 5: Variable listing
     try:
         print(f"\n📋 Variable Listing Test:")
         local_vars = session.list_local()
@@ -90,7 +90,7 @@ def test_basic_functionality():
     except Exception as e:
         print(f"   ❌ Variable listing failed: {e}")
     
-    # Test 6: LLM実行機能 - より長いdelay付き
+    # Test 6: LLM execution functionality - with longer delay
     try:
         print(f"\n🤖 LLM Execution Test:")
         print("   Testing simple variable assignment with 3.0s rate limiting...")
@@ -151,15 +151,15 @@ def print_summary(results):
     else:
         print("🔴 SOME TESTS FAILED")
     
-    # 推奨事項
-    print(f"\n💡 推奨事項:")
+    # Recommendations
+    print(f"\n💡 Recommendations:")
     if not results["llm_execution"]:
-        print("   - API制限解除後にLLM機能を再テスト")
-        print("   - 3.0秒のRate Limitingでも制限回避できず")
+        print("   - Retest LLM functionality after API limits are lifted")
+        print("   - 3.0s Rate Limiting still couldn't avoid limits")
     if results["python_api"] and results["global_vars"]:
-        print("   - 基本機能は完全動作、プロダクション利用可能")
+        print("   - Basic functions working perfectly, production ready")
     if results["japanese_vars"]:
-        print("   - 日本語サポート完璧")
+        print("   - Japanese support is perfect")
 
 
 if __name__ == "__main__":

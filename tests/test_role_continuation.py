@@ -16,15 +16,15 @@ def test_role_continuation():
     session_with_history = NLMSession(namespace="role_test", disable_history=False)
     
     print("Step 1: Setting up expert role...")
-    result1 = session_with_history.execute("あなたは日本の歴史専門家として振る舞ってください。専門分野は江戸時代です。")
+    result1 = session_with_history.execute("Please act as an expert in Japanese history. Your specialty is the Edo period.")
     print(f"Response 1: {result1}")
     
     print("\nStep 2: Asking expert question (should remember role)...")
-    result2 = session_with_history.execute("江戸時代の特徴について教えてください")
+    result2 = session_with_history.execute("Please tell me about the characteristics of the Edo period")
     print(f"Response 2: {result2}")
     
     print("\nStep 3: Follow-up question (should maintain context)...")
-    result3 = session_with_history.execute("その時代の文化的な側面についてはどうですか？")
+    result3 = session_with_history.execute("What about the cultural aspects of that era?")
     print(f"Response 3: {result3}")
     
     # Check context info
@@ -43,11 +43,11 @@ def test_role_continuation():
     session_without_history = NLMSession(namespace="no_role_test", disable_history=True)
     
     print("Step 1: Setting up expert role...")
-    result1_no_history = session_without_history.execute("あなたは日本の歴史専門家として振る舞ってください。専門分野は江戸時代です。")
+    result1_no_history = session_without_history.execute("Please act as an expert in Japanese history. Your specialty is the Edo period.")
     print(f"Response 1: {result1_no_history}")
     
     print("\nStep 2: Asking expert question (role likely forgotten)...")
-    result2_no_history = session_without_history.execute("江戸時代の特徴について教えてください")
+    result2_no_history = session_without_history.execute("Please tell me about the characteristics of the Edo period")
     print(f"Response 2: {result2_no_history}")
     
     # Check context info
@@ -66,7 +66,7 @@ def test_role_continuation():
     
     # Add some conversation
     for i in range(3):
-        session_manage.execute(f"メッセージ {i+1}: テスト会話")
+        session_manage.execute(f"Message {i+1}: Test conversation")
     
     print("Before management:")
     info_before = session_manage.get_context_info()
@@ -92,9 +92,9 @@ def test_role_continuation():
     
     session_export = NLMSession(namespace="export_test", disable_history=False)
     
-    session_export.execute("システム：テスト会話を開始します")
-    session_export.execute("ユーザー：こんにちは")
-    session_export.execute("アシスタント：こんにちは！")
+    session_export.execute("System: Starting test conversation")
+    session_export.execute("User: Hello")
+    session_export.execute("Assistant: Hello!")
     
     # Export conversation
     export_success = session_export.export_context("test_conversation.json")
@@ -114,16 +114,16 @@ def test_variable_and_context_integration():
     session = NLMSession(namespace="integration_test", disable_history=False)
     
     print("Step 1: Set role and save variables...")
-    result1 = session.execute("あなたは料理専門家です。{{specialty}}を'日本料理'に設定してください")
+    result1 = session.execute("You are a culinary expert. Please set {{specialty}} to 'Japanese cuisine'")
     specialty = session.get("specialty")
     print(f"Specialty set to: {specialty}")
     
     print("\nStep 2: Continue conversation using both context and variables...")
-    result2 = session.execute("{{specialty}}の専門家として、おすすめの料理を教えてください")
+    result2 = session.execute("As an expert in {{specialty}}, please recommend some dishes")
     print(f"Expert recommendation: {result2}")
     
     print("\nStep 3: Update variables within context...")
-    session.execute("{{difficulty}}を'初心者向け'に設定して、その難易度に適した{{specialty}}のレシピを提案してください")
+    session.execute("Set {{difficulty}} to 'beginner-friendly' and suggest {{specialty}} recipes suitable for that difficulty level")
     difficulty = session.get("difficulty")
     print(f"Difficulty set to: {difficulty}")
     
