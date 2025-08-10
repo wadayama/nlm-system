@@ -27,6 +27,9 @@ wheels/
 variables.db
 *.db-journal
 *.db-wal
+*.db-shm
+test_*.db
+test_*.db-*
 
 # IDE
 .vscode/

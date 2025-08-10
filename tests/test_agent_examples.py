@@ -8,7 +8,7 @@ import time
 import threading
 
 # Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agent_examples import (
     DataCollectorAgent,
