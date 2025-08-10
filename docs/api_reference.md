@@ -4,9 +4,15 @@
 
 This document provides comprehensive API reference for the NLM (Natural Language Macro) system. The NLM system provides a unified interface for natural language macro execution with session-based variable management and multi-agent coordination.
 
-## Core Classes
+---
 
-### NLMSession
+## 🔧 Core Classes
+
+### 📋 NLMSession
+
+> **Primary Interface** - Natural language macro execution and variable management
+> 
+> **Key Methods**: `save()`, `get()`, `execute()`, `list_local()`, `list_global()`
 
 The primary interface for natural language macro execution and variable management.
 
@@ -59,6 +65,8 @@ session.save("task_status", "processing")
 session.save("@project_config", "production")
 ```
 
+• • •
+
 ##### get(key)
 
 Retrieve a variable value.
@@ -95,6 +103,8 @@ session.delete("task_status")
 session.delete("@project_config")
 ```
 
+• • •
+
 ##### list_local()
 
 List all local variables in the session.
@@ -106,6 +116,8 @@ List all local variables in the session.
 local_vars = session.list_local()
 # Returns: {"task_status": "processing", "data_count": "1000"}
 ```
+
+• • •
 
 ##### list_global()
 
@@ -119,6 +131,8 @@ global_vars = session.list_global()
 # Returns: {"project_config": "production", "last_update": "2024-01-15"}
 ```
 
+• • •
+
 ##### clear_local()
 
 Clear all local variables in the session.
@@ -129,6 +143,8 @@ Clear all local variables in the session.
 ```python
 session.clear_local()
 ```
+
+• • •
 
 #### Natural Language Execution
 
@@ -158,6 +174,8 @@ Process the data in {{input_file}} and:
 result = session.execute("Set {{name}} to 'Alice' and {{age}} to '30'")
 ```
 
+• • •
+
 #### Configuration Methods
 
 ##### set_reasoning_effort(effort)
@@ -172,6 +190,8 @@ Set the reasoning effort level for LLM processing.
 session.set_reasoning_effort("low")  # Faster processing
 ```
 
+• • •
+
 ##### set_verbosity(level)
 
 Set the verbosity level for LLM responses (OpenAI models only).
@@ -184,6 +204,8 @@ Set the verbosity level for LLM responses (OpenAI models only).
 session.set_verbosity("low")  # More concise responses
 ```
 
+• • •
+
 ##### reset_context()
 
 Reset the conversation context/history.
@@ -195,7 +217,13 @@ Reset the conversation context/history.
 session.reset_context()
 ```
 
-### SystemSession
+---
+
+### 🌐 SystemSession
+
+> **Unified Global Access** - Enhanced global variable handling with automatic @-prefix
+> 
+> **Key Features**: Auto @-prefix handling, clean key listing, context manager support
 
 A specialized session class providing unified global variable access with `@`-prefix syntax consistency.
 
@@ -265,9 +293,15 @@ with SystemSession() as system:
     # Automatic cleanup
 ```
 
-## Multi-Agent System Classes
+---
 
-### BaseAgent
+## 🤖 Multi-Agent System Classes
+
+### 🏷️ BaseAgent
+
+> **Abstract Base Class** - Foundation for creating custom agents
+> 
+> **Key Methods**: `run()` (abstract), `set_status()`, `execute_macro()`
 
 Base class for creating custom agents.
 
@@ -330,7 +364,13 @@ Execute a natural language macro.
 
 **Returns:** str - Execution result
 
-### MultiAgentSystem
+---
+
+### ⚡ MultiAgentSystem
+
+> **Agent Orchestration** - System for coordinating multiple agents
+> 
+> **Key Methods**: `add_agent()`, `run_sequential()`, `run_parallel()`
 
 System for coordinating multiple agents.
 
@@ -397,9 +437,13 @@ results = system.run_parallel()
 print(f"Completed: {results['successful']}, Failed: {results['failed']}")
 ```
 
-## Built-in Agent Types
+---
 
-### DataCollectorAgent
+## 🛠️ Built-in Agent Types
+
+### 📊 DataCollectorAgent
+
+> **Data Collection** - One-time execution agent for data gathering tasks
 
 One-time execution agent for data collection tasks.
 
@@ -410,7 +454,9 @@ collector = DataCollectorAgent("collector1", "database_source")
 result = collector.run()
 ```
 
-### MonitorAgent
+### 📈 MonitorAgent
+
+> **System Monitoring** - Continuous execution agent for system monitoring
 
 Continuous execution agent for system monitoring.
 
@@ -421,7 +467,9 @@ monitor = MonitorAgent("monitor1", check_interval=5.0)
 # Run in background thread
 ```
 
-### ResearchAgent
+### 🔬 ResearchAgent
+
+> **Research Workflows** - Multi-phase execution agent for research tasks
 
 Multi-phase execution agent for research workflows.
 
@@ -432,7 +480,9 @@ researcher = ResearchAgent("researcher1", "AI trends analysis")
 result = researcher.run()  # Executes all research phases
 ```
 
-### CoordinatorAgent
+### 👥 CoordinatorAgent
+
+> **Agent Management** - Agent for managing and coordinating other agents
 
 Agent for managing and coordinating other agents.
 
@@ -443,7 +493,9 @@ coordinator = CoordinatorAgent("coord1", "team_management")
 coordinator.run()  # Manages team coordination
 ```
 
-## Utility Functions
+---
+
+## 🔧 Utility Functions
 
 ### nlm_execute(macro_content, namespace=None)
 
@@ -462,7 +514,9 @@ from nlm_interpreter import nlm_execute
 result = nlm_execute("Save 'test data' to {{sample_data}}")
 ```
 
-## Variable History Functions
+• • •
+
+## 📜 Variable History Functions
 
 ### enable_logging()
 
@@ -474,15 +528,21 @@ from variable_history import enable_logging
 enable_logging()
 ```
 
+• • •
+
 ### disable_logging()
 
 Disable variable change history logging.
+
+• • •
 
 ### reset_logging()
 
 Reset/clear all variable change history.
 
-## Configuration
+---
+
+## ⚙️ Configuration
 
 ### Default Settings
 
@@ -497,7 +557,9 @@ Create an API key file in one of these locations:
 - Project-specific: `.openai_key` (current directory)
 - User-wide: `~/.config/nlm/openai_key`
 
-## Error Handling
+---
+
+## ⚠️ Error Handling
 
 ### Common Exceptions
 
@@ -513,7 +575,9 @@ Create an API key file in one of these locations:
 3. Validate variable names before operations
 4. Handle session cleanup in long-running applications
 
-## Examples
+---
+
+## 📝 Examples
 
 ### Basic Usage
 
