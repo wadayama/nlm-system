@@ -44,7 +44,7 @@ class NLMSession:
         openai_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
         
         # Default model
-        self.model = model or "gpt-oss:20b"
+        self.model = model or "gpt-5"
         
         # Store reasoning and verbosity settings
         self.reasoning_effort = reasoning_effort
@@ -54,13 +54,13 @@ class NLMSession:
             # OpenAI API configuration
             self.endpoint = endpoint or "https://api.openai.com/v1"
             self.api_key = api_key or self._load_openai_key()
-            print(f"🌐 Using OpenAI API: {self.model}")
+            print(f"Using OpenAI API: {self.model}")
             self._show_openai_warning()
         else:
             # Local LLM configuration (gpt-oss:20b or others)
             self.endpoint = endpoint or "http://localhost:1234/v1"  # LMStudio default
             self.api_key = api_key or "ollama"
-            print(f"💻 Using local LLM: {self.model}")
+            print(f"Using local LLM: {self.model}")
         
         # Initialize OpenAI client
         self.client = OpenAI(
@@ -76,10 +76,10 @@ class NLMSession:
         self.disable_history = disable_history
         if not self.disable_history:
             self.conversation_history = ConversationHistory(self.namespace, "variables.db")
-            print(f"📚 Conversation history enabled for namespace: {self.namespace}")
+            print(f"Conversation history enabled for namespace: {self.namespace}")
         else:
             self.conversation_history = None
-            print(f"🚫 Conversation history disabled")
+            print(f"Conversation history disabled")
         
         # System prompt for natural language macro execution
         self.system_prompt = """You are a natural language macro interpreter that processes {{variable}} syntax.
@@ -278,7 +278,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         }
         
         cost_info = model_costs.get(self.model, "Standard tier")
-        print(f"⚠️  Using OpenAI API - {cost_info}")
+        print(f"Warning: Using OpenAI API - {cost_info}")
         print("   Charges will apply to your OpenAI account")
         print(f"   Model: {self.model}")
         print()
@@ -697,11 +697,11 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             True if successful, False if history is disabled
         """
         if self.disable_history:
-            print("⚠️ Conversation history is disabled")
+            print("Warning: Conversation history is disabled")
             return False
         
         self.conversation_history.clear_all()
-        print(f"🔄 Conversation context reset for namespace: {self.namespace}")
+        print(f"Conversation context reset for namespace: {self.namespace}")
         return True
     
     def trim_context(self, keep_recent: int):
@@ -714,7 +714,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             True if successful, False if history is disabled
         """
         if self.disable_history:
-            print("⚠️ Conversation history is disabled")
+            print("Warning: Conversation history is disabled")
             return False
         
         # Get current message count
@@ -722,13 +722,13 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         total_messages = stats['total_messages']
         
         if total_messages <= keep_recent:
-            print(f"📝 No trimming needed. Current messages: {total_messages}")
+            print(f"No trimming needed. Current messages: {total_messages}")
             return True
         
         # Remove old messages
         remove_count = total_messages - keep_recent
         self.conversation_history.clear_recent(remove_count)
-        print(f"✂️ Trimmed {remove_count} messages, kept {keep_recent} recent messages")
+        print(f"Trimmed {remove_count} messages, kept {keep_recent} recent messages")
         return True
     
     def get_context_info(self) -> dict:
@@ -782,14 +782,14 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             True if successful, False if failed or history disabled
         """
         if self.disable_history:
-            print("⚠️ Conversation history is disabled")
+            print("Warning: Conversation history is disabled")
             return False
         
         success = self.conversation_history.export_to_file(filepath)
         if success:
-            print(f"📁 Conversation history exported to: {filepath}")
+            print(f"Conversation history exported to: {filepath}")
         else:
-            print(f"❌ Failed to export conversation history")
+            print(f"Failed to export conversation history")
         
         return success
     
@@ -805,7 +805,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         
         old_level = self.reasoning_effort
         self.reasoning_effort = level
-        print(f"🧠 Reasoning effort changed: {old_level} → {level}")
+        print(f"Reasoning effort changed: {old_level} → {level}")
     
     def set_verbosity(self, level: str):
         """Set verbosity level
@@ -819,7 +819,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         
         old_level = self.verbosity
         self.verbosity = level
-        print(f"🗣 Verbosity changed: {old_level} → {level}")
+        print(f"Verbosity changed: {old_level} → {level}")
     
     def get_settings(self) -> dict:
         """Get current session settings

@@ -43,10 +43,7 @@ class MultiAgentSystem:
     
     def _initialize_system_state(self):
         """Initialize system-level state variables"""
-        self.system_session.save("system_id", self.system_id)
-        self.system_session.save("system_status", "initialized")
-        self.system_session.save("creation_time", str(datetime.now()))
-        self.system_session.save("agent_count", "0")
+        # Removed automatic metadata logging (system_id, system_status)
         self.system_session.save("@system_shutdown", "false")
         
         self.logger.info(f"MultiAgentSystem {self.system_id} initialized")
@@ -58,11 +55,7 @@ class MultiAgentSystem:
             agent: Agent instance to add
         """
         self.agents.append(agent)
-        self.system_session.save("agent_count", str(len(self.agents)))
-        
-        # Log agent addition
-        agent_list = [a.agent_id for a in self.agents]
-        self.system_session.save("agent_list", ",".join(agent_list))
+# Removed automatic agent metadata logging
         
         self.logger.info(f"Added agent {agent.agent_id} (total: {len(self.agents)})")
     
@@ -78,10 +71,7 @@ class MultiAgentSystem:
         for i, agent in enumerate(self.agents):
             if agent.agent_id == agent_id:
                 del self.agents[i]
-                self.system_session.save("agent_count", str(len(self.agents)))
-                
-                agent_list = [a.agent_id for a in self.agents]
-                self.system_session.save("agent_list", ",".join(agent_list))
+# Removed automatic agent metadata logging
                 
                 self.logger.info(f"Removed agent {agent_id}")
                 return True
@@ -161,7 +151,7 @@ class MultiAgentSystem:
             "system_execution_time": time.time() - self.start_time
         }
         
-        self.system_session.save("execution_summary", str(summary))
+# Removed automatic execution_summary logging
         return summary
     
     def run_parallel(self, max_concurrent: int = None) -> Dict[str, Any]:
@@ -242,7 +232,7 @@ class MultiAgentSystem:
             "system_execution_time": time.time() - self.start_time
         }
         
-        self.system_session.save("execution_summary", str(summary))
+# Removed automatic execution_summary logging
         return summary
     
     def run_monitored(self, check_interval: float = 5.0, max_runtime: float = 300.0) -> Dict[str, Any]:
@@ -321,18 +311,16 @@ class MultiAgentSystem:
         """Set system to running state"""
         self.running = True
         self.start_time = time.time()
-        self.system_session.save("system_status", "running")
-        self.system_session.save("start_time", str(datetime.now()))
-        self.system_session.save("@system_shutdown", "false")
+        # Removed automatic metadata logging (system_status, start_time, system_shutdown)
     
     def _set_system_completed(self):
         """Set system to completed state"""
         self.running = False
-        self.system_session.save("system_status", "completed")
-        self.system_session.save("completion_time", str(datetime.now()))
+# Removed automatic system_status logging
+# Removed automatic completion_time logging
         
         total_time = time.time() - self.start_time if self.start_time else 0
-        self.system_session.save("total_execution_time", str(total_time))
+# Removed automatic total_execution_time logging
         
         self.logger.info(f"System execution completed in {total_time:.2f}s")
     
@@ -342,7 +330,7 @@ class MultiAgentSystem:
         self.running = False
         self.system_session.save("@system_shutdown", "true")
         self._stop_all_agents()
-        self.system_session.save("system_status", "stopped")
+# Removed automatic system_status logging
     
     def _stop_all_agents(self):
         """Stop all agents"""
@@ -429,7 +417,7 @@ class MultiAgentSystem:
         self._stop_all_agents()
         
         # Clear system state
-        self.system_session.save("system_status", "cleaned_up")
+# Removed automatic system_status logging
         self.system_session.save("cleanup_time", str(datetime.now()))
         
         # Clear thread references

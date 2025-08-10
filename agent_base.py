@@ -39,9 +39,7 @@ class BaseAgent:
         self.logger = logging.getLogger(f"Agent.{agent_id}")
         
         # Initialize agent state in SQLite
-        self.session.save("agent_id", agent_id)
-        self.session.save("agent_status", "initialized")
-        self.session.save("creation_time", str(datetime.now()))
+        # Removed automatic metadata logging (agent_id, agent_status, creation_time) to reduce noise
         
         self.logger.info(f"Agent {agent_id} initialized")
     
@@ -71,7 +69,7 @@ class BaseAgent:
         """
         self.logger.debug(f"Executing macro: {macro_content[:50]}...")
         result = self.session.execute(macro_content)
-        self.session.save("last_macro_time", str(datetime.now()))
+        # Removed automatic last_macro_time logging to reduce noise
         return result
     
     def stop(self):
