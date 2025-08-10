@@ -26,7 +26,7 @@ def test_data_collector_agent():
     collector = DataCollectorAgent("collector1", "test database")
     
     # Check initial state
-    assert collector.get_status() == "initialized"
+    assert collector.get_status() == "unknown"  # No automatic initialization
     assert collector.session.get("data_source") == "test database"
     
     # Run collector (will execute once and complete)
@@ -57,7 +57,7 @@ def test_monitor_agent():
     monitor = MonitorAgent("monitor1", check_interval=0.5)
     
     # Check initial state
-    assert monitor.get_status() == "initialized"
+    assert monitor.get_status() == "unknown"  # No automatic initialization
     assert monitor.session.get("check_interval") == "0.5"
     
     # Test without actual LLM execution to avoid timeout
@@ -90,7 +90,7 @@ def test_research_agent():
     researcher = ResearchAgent("researcher1", "artificial intelligence trends")
     
     # Check initial state
-    assert researcher.get_status() == "initialized"
+    assert researcher.get_status() == "unknown"  # No automatic initialization
     assert researcher.session.get("research_topic") == "artificial intelligence trends"
     assert researcher.session.get("research_phase") == "initialized"
     
@@ -137,7 +137,7 @@ def test_coordinator_agent():
                                   team_agents=["worker1", "worker2"])
     
     # Check initial state
-    assert coordinator.get_status() == "initialized"
+    assert coordinator.get_status() == "unknown"  # No automatic initialization
     assert coordinator.session.get("team_size") == "2"
     assert "worker1" in coordinator.session.get("team_agents")
     

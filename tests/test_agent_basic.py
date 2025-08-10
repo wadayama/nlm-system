@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 import logging
 import time
+from datetime import datetime
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -18,9 +19,12 @@ def test_base_agent_cannot_instantiate():
     
     agent = BaseAgent("test_agent")
     
+    # Clear any previous state for clean test
+    agent.session.clear_local()
+    
     # Check initial state
     assert agent.agent_id == "test_agent"
-    assert agent.get_status() == "initialized"
+    assert agent.get_status() == "unknown"  # No automatic status initialization
     assert agent.running == False
     
     # Try to run - should raise NotImplementedError
@@ -40,16 +44,19 @@ def test_concrete_agent():
     # Create a test agent that implements run()
     class TestAgent(BaseAgent):
         def run(self):
-            self.log_activity("Starting test run")
+            self.logger.info("Starting test run")
             self.session.save("test_result", "success")
             self.set_status("completed")
             return "test completed"
     
     agent = TestAgent("test_concrete")
     
+    # Clear any previous state for clean test
+    agent.session.clear_local()
+    
     # Check initial state
     assert agent.agent_id == "test_concrete"
-    assert agent.get_status() == "initialized"
+    assert agent.get_status() == "unknown"
     
     # Run the agent
     result = agent.run()
@@ -57,9 +64,8 @@ def test_concrete_agent():
     
     # Check that state was properly saved
     assert agent.session.get("test_result") == "success"
-    assert agent.session.get("agent_id") == "test_concrete"
+    # agent_id and last_activity no longer automatically saved (removed for simplification)
     assert agent.get_status() == "completed"
-    assert agent.session.get("last_activity") == "Starting test run"
     
     print("   ✅ Concrete agent works correctly")
 
@@ -84,8 +90,11 @@ def test_agent_state_management():
     
     agent = StateTestAgent("state_test")
     
+    # Clear any previous state for clean test
+    agent.session.clear_local()
+    
     # Initial state
-    assert agent.get_status() == "initialized"
+    assert agent.get_status() == "unknown"
     
     # Run and check state transitions
     agent.run()
@@ -95,70 +104,50 @@ def test_agent_state_management():
     assert agent.session.get("task_result") == "processed"
     assert agent.session.get("task_progress") == "50%"
     
-    # Check runtime info
-    info = agent.get_runtime_info()
-    assert info["agent_id"] == "state_test"
-    assert info["agent_class"] == "StateTestAgent"
-    assert info["status"] == "completed"
-    assert info["running"] == False
-    assert "creation_time" in info
+    # Runtime info functionality removed for simplification
+    # Basic status check still available
+    assert agent.get_status() == "completed"
+    assert agent.running == False
     
     print("   ✅ State management works correctly")
 
 
 def test_agent_communication():
-    """Test inter-agent communication"""
-    print("\n4️⃣ Testing inter-agent communication...")
+    """Test inter-agent communication via global variables"""
+    print("\n4️⃣ Testing inter-agent communication (simplified)...")
     
-    class CommunicatingAgent(BaseAgent):
+    # Communication features have been removed from BaseAgent
+    # This test now demonstrates simple global variable communication
+    
+    class SimpleCommAgent(BaseAgent):
         def run(self):
-            # Check for messages
-            messages = self.check_messages()
-            self.session.save("received_messages", str(len(messages)))
-            
-            # Process messages
-            for msg in messages:
-                if msg["message"] == "ping":
-                    self.send_message(msg["from"], "pong")
+            # Check for messages via global variables
+            msg = self.session.get("@msg_for_me")
+            if msg:
+                self.session.save("received_message", msg)
+                # Send response via global variable
+                if msg == "ping":
+                    self.session.save("@response", "pong")
     
     # Create two agents
-    agent1 = CommunicatingAgent("agent1")
-    agent2 = CommunicatingAgent("agent2")
+    agent1 = SimpleCommAgent("agent1")
+    agent2 = SimpleCommAgent("agent2")
     
-    # Agent1 sends message to Agent2
-    agent1.send_message("agent2", "Hello from agent1")
-    agent1.send_message("agent2", "ping")
+    # Clear any previous state
+    agent1.session.clear_local()
+    agent2.session.clear_local()
     
-    # Agent2 checks messages
-    messages = agent2.check_messages()
-    print(f"   Debug: Found {len(messages)} messages")
-    for i, msg in enumerate(messages):
-        print(f"   Debug: Message {i+1}: from={msg.get('from')}, message={msg.get('message')[:30]}...")
+    # Agent1 sends message via global variable
+    agent1.session.save("@msg_for_me", "ping")
     
-    # Debug: Check what global variables exist
-    all_globals = agent2.session.list_global()
-    print(f"   Debug: Global variables: {list(all_globals.keys())}")
-    
-    assert len(messages) == 2, f"Expected 2 messages, got {len(messages)}"
-    assert messages[0]["from"] == "agent1"
-    assert messages[0]["message"] == "Hello from agent1"
-    assert messages[1]["message"] == "ping"
-    assert "timestamp" in messages[0]
-    
-    # Agent2 processes messages
+    # Agent2 processes the message
     agent2.run()
     
-    # Agent1 should receive the pong response
-    agent1_messages = agent1.check_messages()
-    assert len(agent1_messages) == 1
-    assert agent1_messages[0]["from"] == "agent2"
-    assert agent1_messages[0]["message"] == "pong"
+    # Check that agent2 received and responded
+    assert agent2.session.get("received_message") == "ping"
+    assert agent2.session.get("@response") == "pong"
     
-    # Clear messages
-    agent2.clear_messages()
-    assert len(agent2.check_messages()) == 0
-    
-    print("   ✅ Inter-agent communication works correctly")
+    print("   ✅ Simple global variable communication works correctly")
 
 
 def test_agent_global_coordination():
@@ -170,8 +159,17 @@ def test_agent_global_coordination():
             # Set a global flag
             self.session.save("@project_status", "in_progress")
             
-            # Wait for coordination signal
-            if self.wait_for_global("ready_signal", "go", max_attempts=3):
+            # Wait for coordination signal (using alternative implementation)
+            import time
+            synchronized = False
+            for attempt in range(3):
+                current_value = self.session.get("@ready_signal")
+                if current_value == "go":
+                    synchronized = True
+                    break
+                time.sleep(1.0)
+            
+            if synchronized:
                 self.session.save("coordination_result", "synchronized")
             else:
                 self.session.save("coordination_result", "timeout")
@@ -215,7 +213,10 @@ def test_agent_stop_mechanism():
                 
                 # Check for stop signal
                 if self.session.get("@stop_signal") == "true":
-                    self.stop()
+                    # stop() method removed - manually stop
+                    self.running = False
+                    self.session.save("agent_status", "stopping")
+                    self.session.save("stop_time", str(datetime.now()))
             
             self.set_status("stopped")
             return iterations
@@ -250,15 +251,15 @@ def test_agent_status_checking():
     agent1.set_status("working")
     agent2.set_status("idle")
     
-    # Supervisor checks worker statuses
-    worker1_status = agent3.get_agent_status("worker1")
-    worker2_status = agent3.get_agent_status("worker2")
+    # Supervisor checks worker statuses (using direct variable access)
+    worker1_status = agent3.session.variable_db.get_variable("worker1:agent_status") or "unknown"
+    worker2_status = agent3.session.variable_db.get_variable("worker2:agent_status") or "unknown"
     
     assert worker1_status == "working"
     assert worker2_status == "idle"
     
     # Check non-existent agent
-    unknown_status = agent3.get_agent_status("non_existent")
+    unknown_status = agent3.session.variable_db.get_variable("non_existent:agent_status") or "unknown"
     assert unknown_status == "unknown"
     
     print("   ✅ Cross-agent status checking works correctly")

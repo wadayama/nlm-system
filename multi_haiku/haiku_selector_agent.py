@@ -13,8 +13,8 @@ from agent_base import BaseAgent
 class HaikuSelectorAgent(BaseAgent):
     """Agent that selects the best haiku from 4 generated candidates"""
     
-    def __init__(self, agent_id="haiku_selector"):
-        super().__init__(agent_id, reasoning_effort="low")
+    def __init__(self, agent_id="haiku_selector", model=None, reasoning_effort="low"):
+        super().__init__(agent_id, model=model, reasoning_effort=reasoning_effort)
     
     def run(self):
         """Select the best haiku from 4 candidates"""

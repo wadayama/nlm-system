@@ -22,15 +22,16 @@ class MultiAgentSystem:
     monitoring, and coordination between agents.
     """
     
-    def __init__(self, system_id: str = "default_system"):
+    def __init__(self, system_id: str = "default_system", model: str = None):
         """Initialize the multi-agent system
         
         Args:
             system_id: Unique identifier for this system instance
+            model: LLM model to use for system session (optional)
         """
         self.system_id = system_id
         self.agents: List[BaseAgent] = []
-        self.system_session = NLMSession(namespace=f"system_{system_id}")
+        self.system_session = NLMSession(namespace=f"system_{system_id}", model=model)
         self.logger = logging.getLogger(f"MultiAgentSystem.{system_id}")
         
         # System state
@@ -43,8 +44,8 @@ class MultiAgentSystem:
     
     def _initialize_system_state(self):
         """Initialize system-level state variables"""
-        # Removed automatic metadata logging (system_id, system_status)
-        self.system_session.save("@system_shutdown", "false")
+        # Removed automatic metadata logging (system_id, system_status, system_shutdown)
+        # Users can initialize @system_shutdown manually if advanced monitoring is needed
         
         self.logger.info(f"MultiAgentSystem {self.system_id} initialized")
     
@@ -235,77 +236,7 @@ class MultiAgentSystem:
 # Removed automatic execution_summary logging
         return summary
     
-    def run_monitored(self, check_interval: float = 5.0, max_runtime: float = 300.0) -> Dict[str, Any]:
-        """Run agents with monitoring and automatic management
-        
-        Args:
-            check_interval: Seconds between monitoring checks
-            max_runtime: Maximum total runtime in seconds
-            
-        Returns:
-            Dictionary with execution results and statistics
-        """
-        self.logger.info(f"Starting monitored execution (check_interval: {check_interval}s, max_runtime: {max_runtime}s)")
-        self._set_system_running()
-        
-        # Start all agents in parallel
-        def run_agent_monitored(agent: BaseAgent):
-            try:
-                agent.run()
-            except Exception as e:
-                self.logger.error(f"Agent {agent.agent_id} error: {e}")
-                agent.set_status("error")
-        
-        # Start threads
-        threads = []
-        for agent in self.agents:
-            thread = threading.Thread(target=run_agent_monitored, args=(agent,))
-            self.agent_threads[agent.agent_id] = thread
-            threads.append(thread)
-            thread.start()
-        
-        # Monitoring loop
-        monitoring_start = time.time()
-        while self.running and (time.time() - monitoring_start) < max_runtime:
-            
-            # Check agent statuses
-            status_report = self._get_system_status()
-            self.logger.debug(f"System status: {status_report}")
-            
-            # Check if all agents are done
-            all_done = all(not thread.is_alive() for thread in threads)
-            if all_done:
-                self.logger.info("All agents completed")
-                break
-            
-            # Check for system stop signals
-            if self.system_session.get("@system_shutdown") == "true":
-                self.logger.info("System shutdown requested")
-                self._stop_all_agents()
-                break
-            
-            # Wait before next check
-            time.sleep(check_interval)
-        
-        # Ensure all threads are finished
-        for thread in threads:
-            if thread.is_alive():
-                self.logger.warning(f"Waiting for thread to complete...")
-                thread.join(timeout=10)
-        
-        self._set_system_completed()
-        
-        # Generate final report
-        final_status = self._get_system_status()
-        summary = {
-            "execution_mode": "monitored",
-            "total_agents": len(self.agents),
-            "monitoring_duration": time.time() - monitoring_start,
-            "final_status": final_status,
-            "system_execution_time": time.time() - self.start_time
-        }
-        
-        return summary
+    # run_monitored() removed - users can implement custom monitoring if needed
     
     def _set_system_running(self):
         """Set system to running state"""
@@ -324,18 +255,7 @@ class MultiAgentSystem:
         
         self.logger.info(f"System execution completed in {total_time:.2f}s")
     
-    def stop_system(self):
-        """Stop the entire system gracefully"""
-        self.logger.info("Stopping multi-agent system")
-        self.running = False
-        self.system_session.save("@system_shutdown", "true")
-        self._stop_all_agents()
-# Removed automatic system_status logging
-    
-    def _stop_all_agents(self):
-        """Stop all agents"""
-        for agent in self.agents:
-            agent.stop()
+    # stop_system() and _stop_all_agents() removed - users can implement if needed
     
     def _get_system_status(self) -> Dict[str, str]:
         """Get status of all agents in the system"""
@@ -344,95 +264,11 @@ class MultiAgentSystem:
             status[agent.agent_id] = agent.get_status()
         return status
     
-    def get_system_info(self) -> Dict[str, Any]:
-        """Get comprehensive system information"""
-        agent_info = []
-        for agent in self.agents:
-            agent_info.append({
-                "agent_id": agent.agent_id,
-                "agent_class": agent.__class__.__name__,
-                "status": agent.get_status(),
-                "runtime_info": agent.get_runtime_info()
-            })
-        
-        return {
-            "system_id": self.system_id,
-            "system_status": self.system_session.get("system_status"),
-            "agent_count": len(self.agents),
-            "agents": agent_info,
-            "creation_time": self.system_session.get("creation_time"),
-            "start_time": self.system_session.get("start_time"),
-            "running": self.running
-        }
+    # get_system_info() removed - users can access basic info via len(agents), system_id etc.
     
-    def send_broadcast(self, message: str):
-        """Send a message to all agents in the system
-        
-        Args:
-            message: Message to broadcast
-        """
-        self.logger.info(f"Broadcasting message to {len(self.agents)} agents")
-        
-        for agent in self.agents:
-            agent.send_message(agent.agent_id, f"BROADCAST: {message}")
-        
-        # Also set as global message
-        self.system_session.save("@system_broadcast", message)
-        self.system_session.save("@system_broadcast_time", str(datetime.now()))
+    # send_broadcast() removed - users can implement custom broadcast if needed
     
-    def wait_for_completion(self, timeout: float = None) -> bool:
-        """Wait for all agents to complete
-        
-        Args:
-            timeout: Maximum time to wait in seconds (None = wait indefinitely)
-            
-        Returns:
-            True if all completed, False if timeout
-        """
-        start_wait = time.time()
-        
-        while self.running:
-            # Check if all agents are in completed/stopped state
-            statuses = self._get_system_status()
-            all_done = all(status in ["completed", "stopped", "error"] for status in statuses.values())
-            
-            if all_done:
-                self.logger.info("All agents have completed")
-                return True
-            
-            # Check timeout
-            if timeout and (time.time() - start_wait) > timeout:
-                self.logger.warning("Timeout waiting for agent completion")
-                return False
-            
-            time.sleep(1)
-        
-        return True
+    # wait_for_completion() removed - users can implement custom waiting logic if needed
     
-    def cleanup(self):
-        """Clean up system resources"""
-        self.logger.info("Cleaning up multi-agent system")
-        
-        # Stop any running agents
-        self._stop_all_agents()
-        
-        # Clear system state
-# Removed automatic system_status logging
-        self.system_session.save("cleanup_time", str(datetime.now()))
-        
-        # Clear thread references
-        self.agent_threads.clear()
-        
-        self.logger.info("System cleanup completed")
-    
-    def __enter__(self):
-        """Context manager entry"""
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit - ensures cleanup"""
-        self.cleanup()
-    
-    def __repr__(self):
-        """String representation"""
-        return f"MultiAgentSystem(id='{self.system_id}', agents={len(self.agents)}, status='{self.system_session.get('system_status')}')"
+    # cleanup(), context manager (__enter__, __exit__), and __repr__() removed for simplicity
+    # Users can manage resources manually if needed

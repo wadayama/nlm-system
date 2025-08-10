@@ -44,7 +44,7 @@ class NLMSession:
         openai_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
         
         # Default model
-        self.model = model or "gpt-5"
+        self.model = model or "gpt-5-mini"
         
         # Store reasoning and verbosity settings
         self.reasoning_effort = reasoning_effort

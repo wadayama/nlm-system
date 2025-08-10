@@ -13,8 +13,8 @@ from agent_base import BaseAgent
 class ThemeGeneratorAgent(BaseAgent):
     """Agent that generates 4 unusual themes for haiku poetry"""
     
-    def __init__(self, agent_id="theme_generator"):
-        super().__init__(agent_id)
+    def __init__(self, agent_id="theme_generator", model=None, reasoning_effort="low"):
+        super().__init__(agent_id, model=model, reasoning_effort=reasoning_effort)
     
     def run(self):
         """Generate 4 unusual themes and store in own session"""

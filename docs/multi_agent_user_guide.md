@@ -173,13 +173,15 @@ results = system.run_monitored(
 ### メッセージ送信
 
 ```python
-# エージェント間でメッセージ送信
-agent1.send_message("researcher_1", "データ収集完了")
+# エージェント間でグローバル変数を使った通信（簡素化版）
+agent1.session.save("@msg_for_researcher", "データ収集完了")
+agent1.session.save("@msg_from", "agent1")
 
 # メッセージ確認
-messages = researcher.check_messages()
-for msg in messages:
-    print(f"{msg['from']}から: {msg['message']}")
+msg = researcher.session.get("@msg_for_researcher")
+sender = researcher.session.get("@msg_from")
+if msg:
+    print(f"{sender}から: {msg}")
 ```
 
 ### グローバル変数での情報共有
@@ -274,7 +276,9 @@ for agent_info in info['agents']:
 
 ```python
 # 全エージェントにメッセージ送信
-system.send_broadcast("システム定期メンテナンス開始")
+# ブロードキャスト機能は削除されました
+# 代わりにグローバル変数を使用
+system.system_session.save("@broadcast_msg", "システム定期メンテナンス開始")
 ```
 
 ### システム停止
@@ -303,7 +307,7 @@ class MyCustomAgent(BaseAgent):
     def run(self):
         """メインロジックを実装"""
         self.set_status("working")
-        self.log_activity("カスタム処理開始")
+        self.logger.info("カスタム処理開始")  # log_activityは削除されました
         
         # 自然言語マクロ実行
         result = self.execute_macro(
@@ -328,7 +332,7 @@ class ContinuousAgent(BaseAgent):
             self.perform_task()
             
             # 停止条件チェック
-            if self.should_stop():
+            if self.session.get("@stop_signal") == "true":  # stop()メソッドは削除されました
                 break
             
             time.sleep(self.interval)
@@ -388,7 +392,9 @@ system.session.save("@system_shutdown", "true")
 
 # 全エージェント停止
 for agent in system.agents:
-    agent.stop()
+    # stop()メソッドは削除されました - 手動で停止
+    agent.running = False
+    agent.set_status("stopped")
 ```
 
 ### デバッグ支援
@@ -401,7 +407,9 @@ logging.basicConfig(level=logging.DEBUG)
 
 # エージェント状態確認
 print(f"Agent status: {agent.get_status()}")
-print(f"Runtime info: {agent.get_runtime_info()}")
+# get_runtime_info()は削除されました
+print(f"Agent ID: {agent.agent_id}")
+print(f"Status: {agent.get_status()}")
 
 # システム状態確認
 print(f"System info: {system.get_system_info()}")

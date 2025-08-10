@@ -13,8 +13,8 @@ from agent_base import BaseAgent
 class HaikuGeneratorAgent(BaseAgent):
     """Agent that generates haiku based on a specific theme"""
     
-    def __init__(self, agent_id, theme_number):
-        super().__init__(agent_id)
+    def __init__(self, agent_id, theme_number, model=None, reasoning_effort="low"):
+        super().__init__(agent_id, model=model, reasoning_effort=reasoning_effort)
         self.theme_number = theme_number
     
     def run(self):

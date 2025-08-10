@@ -33,7 +33,7 @@ class DataCollectorAgent(BaseAgent):
     def run(self):
         """Collect data once and complete"""
         self.set_status("collecting")
-        self.log_activity(f"Starting data collection from {self.data_source}")
+        self.logger.info(f"Starting data collection from {self.data_source}")
         
         # Simulate data collection with a macro
         result = self.execute_macro(
@@ -46,7 +46,7 @@ class DataCollectorAgent(BaseAgent):
         self.session.save("collection_result", "success")
         
         self.set_status("completed")
-        self.log_activity("Data collection completed")
+        self.logger.info("Data collection completed")
         
         return result
 
@@ -76,7 +76,7 @@ class MonitorAgent(BaseAgent):
         """Run continuous monitoring loop"""
         self.running = True
         self.set_status("monitoring")
-        self.log_activity("Starting monitoring")
+        self.logger.info("Starting monitoring")
         
         while self.running:
             self.check_count += 1
@@ -92,7 +92,7 @@ class MonitorAgent(BaseAgent):
             time.sleep(self.check_interval)
         
         self.set_status("stopped")
-        self.log_activity(f"Monitoring stopped after {self.check_count} checks")
+        self.logger.info(f"Monitoring stopped after {self.check_count} checks")
     
     def perform_check(self):
         """Perform a single monitoring check"""
@@ -110,7 +110,7 @@ class MonitorAgent(BaseAgent):
         if alerts and "critical" in str(alerts).lower():
             self.send_alert(alerts)
         
-        self.log_activity(f"Check #{self.check_count} completed")
+        self.logger.info(f"Check #{self.check_count} completed")
     
     def should_stop(self):
         """Check if monitoring should stop"""
@@ -134,9 +134,11 @@ class MonitorAgent(BaseAgent):
         self.logger.warning(f"Alert detected: {alert_message}")
         
         # Send to coordinator if exists
-        coordinator_status = self.get_agent_status("coordinator")
+        coordinator_status = self.session.variable_db.get_variable("coordinator:agent_status") or "unknown"
         if coordinator_status != "unknown":
-            self.send_message("coordinator", f"ALERT: {alert_message}")
+            # Send alert via global variable
+            self.session.save("@msg_for_coordinator", f"ALERT: {alert_message}")
+            self.session.save("@msg_for_coordinator_from", self.agent_id)
         
         # Set global alert flag
         self.session.save("@system_alert", alert_message)
@@ -168,7 +170,7 @@ class ResearchAgent(BaseAgent):
         """Execute research through multiple phases"""
         self.running = True
         self.set_status("researching")
-        self.log_activity(f"Starting research on: {self.research_topic}")
+        self.logger.info(f"Starting research on: {self.research_topic}")
         
         phases = [
             ("literature_review", self.phase_literature_review),
@@ -183,7 +185,7 @@ class ResearchAgent(BaseAgent):
                 break
             
             self.session.save("research_phase", phase_name)
-            self.log_activity(f"Entering phase: {phase_name}")
+            self.logger.info(f"Entering phase: {phase_name}")
             
             # Execute phase
             phase_result = phase_method()
@@ -196,7 +198,7 @@ class ResearchAgent(BaseAgent):
             time.sleep(1)
         
         self.set_status("completed")
-        self.log_activity("Research completed")
+        self.logger.info("Research completed")
     
     def phase_literature_review(self):
         """Phase 1: Review existing literature"""
@@ -318,7 +320,7 @@ class CoordinatorAgent(BaseAgent):
         """Run coordination loop"""
         self.running = True
         self.set_status("coordinating")
-        self.log_activity(f"Starting coordination of {len(self.team_agents)} agents")
+        self.logger.info(f"Starting coordination of {len(self.team_agents)} agents")
         
         while self.running:
             self.coordination_cycles += 1
@@ -340,20 +342,20 @@ class CoordinatorAgent(BaseAgent):
             time.sleep(3)
         
         self.set_status("completed")
-        self.log_activity(f"Coordination completed after {self.coordination_cycles} cycles")
+        self.logger.info(f"Coordination completed after {self.coordination_cycles} cycles")
     
     def check_team_status(self) -> dict:
         """Check the status of all team members"""
         status_report = {}
         
         for agent_id in self.team_agents:
-            status = self.get_agent_status(agent_id)
+            status = self.session.variable_db.get_variable(f"{agent_id}:agent_status") or "unknown"
             status_report[agent_id] = status
             
             # Log any status changes
             last_known = self.session.get(f"last_status_{agent_id}")
             if last_known != status:
-                self.log_activity(f"Agent {agent_id} status changed: {last_known} -> {status}")
+                self.logger.info(f"Agent {agent_id} status changed: {last_known} -> {status}")
                 self.session.save(f"last_status_{agent_id}", status)
         
         self.session.save("team_status", str(status_report))
@@ -383,7 +385,9 @@ class CoordinatorAgent(BaseAgent):
                     now = datetime.datetime.now()
                     if (now - last_time).seconds > 300:  # 5 minutes
                         self.logger.warning(f"Agent {agent_id} may be stuck")
-                        self.send_message(agent_id, "STATUS_CHECK: Please report status")
+                        # Send status check via global variable
+                        self.session.save(f"@msg_for_{agent_id}", "STATUS_CHECK: Please report status")
+                        self.session.save(f"@msg_for_{agent_id}_from", self.agent_id)
                 except:
                     pass
     
@@ -392,13 +396,20 @@ class CoordinatorAgent(BaseAgent):
         tasks = self.session.get("@pending_tasks")
         if tasks:
             for agent_id in idle_agents:
-                self.send_message(agent_id, f"NEW_TASK: {tasks}")
-                self.log_activity(f"Assigned task to {agent_id}")
+                # Send task assignment via global variable
+                self.session.save(f"@msg_for_{agent_id}", f"NEW_TASK: {tasks}")
+                self.session.save(f"@msg_for_{agent_id}_from", self.agent_id)
+                self.logger.info(f"Assigned task to {agent_id}")
                 break  # Assign one task at a time
     
     def process_team_messages(self):
         """Process messages from team members"""
-        messages = self.check_messages()
+        # Check for messages via global variables (simplified)
+        messages = []
+        msg = self.session.get(f"@msg_for_{self.agent_id}")
+        if msg:
+            sender = self.session.get(f"@msg_for_{self.agent_id}_from") or "unknown"
+            messages.append({"from": sender, "message": msg})
         
         for msg in messages:
             sender = msg["from"]
@@ -413,7 +424,9 @@ class CoordinatorAgent(BaseAgent):
         
         # Clear processed messages
         if messages:
-            self.clear_messages()
+            # Clear messages
+            self.session.delete(f"@msg_for_{self.agent_id}")
+            self.session.delete(f"@msg_for_{self.agent_id}_from")
     
     def handle_alert(self, sender: str, alert: str):
         """Handle alert from team member"""
@@ -423,16 +436,18 @@ class CoordinatorAgent(BaseAgent):
         # Notify all agents
         for agent_id in self.team_agents:
             if agent_id != sender:
-                self.send_message(agent_id, f"ALERT from {sender}: {alert}")
+                # Broadcast alert via global variable
+                self.session.save(f"@msg_for_{agent_id}", f"ALERT from {sender}: {alert}")
+                self.session.save(f"@msg_for_{agent_id}_from", self.agent_id)
     
     def handle_completion(self, sender: str, message: str):
         """Handle completion notification from team member"""
-        self.log_activity(f"Agent {sender} reported completion")
+        self.logger.info(f"Agent {sender} reported completion")
         self.session.save(f"completed_{sender}", "true")
     
     def handle_help_request(self, sender: str, message: str):
         """Handle help request from team member"""
-        self.log_activity(f"Help request from {sender}")
+        self.logger.info(f"Help request from {sender}")
         
         # Try to provide assistance or reassign task
         result = self.execute_macro(
@@ -442,7 +457,9 @@ class CoordinatorAgent(BaseAgent):
         
         help_response = self.session.get("help_response")
         if help_response:
-            self.send_message(sender, f"HELP: {help_response}")
+            # Send help response via global variable
+            self.session.save(f"@msg_for_{sender}", f"HELP: {help_response}")
+            self.session.save(f"@msg_for_{sender}_from", self.agent_id)
     
     def check_completion(self) -> bool:
         """Check if coordination should complete"""
@@ -455,7 +472,7 @@ class CoordinatorAgent(BaseAgent):
         all_complete = all(status in ["completed", "stopped"] for status in team_status.values())
         
         if all_complete:
-            self.log_activity("All team agents have completed")
+            self.logger.info("All team agents have completed")
             self.session.save("@project_complete", "true")
             return True
         
