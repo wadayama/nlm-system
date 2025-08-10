@@ -79,25 +79,42 @@ Execute multiple agents in parallel for complex workflows:
 
 ```python
 from multi_agent_system import MultiAgentSystem
+from agent_base import BaseAgent
 from agent_examples import DataCollectorAgent, ResearchAgent, MonitorAgent
+
+# Create custom agent by inheriting from BaseAgent
+class CustomTaskAgent(BaseAgent):
+    def __init__(self, agent_id: str, task_description: str):
+        super().__init__(agent_id)
+        self.task_description = task_description
+        
+    def run(self):
+        """Define your agent's behavior here"""
+        self.set_status("working")
+        
+        # Execute natural language task
+        result = self.execute_macro(
+            f"Perform this task: {self.task_description}. "
+            f"Save the result to {{{{task_result}}}}"
+        )
+        
+        self.set_status("completed")
+        return result
 
 # Create system
 system = MultiAgentSystem("my_project")
 
-# Add various agents
+# Add custom agent alongside built-in agents
+custom_agent = CustomTaskAgent("custom1", "Analyze sales data trends")
 collector = DataCollectorAgent("collector1", "database_source")
 researcher = ResearchAgent("researcher1", "AI trends analysis")
-monitor = MonitorAgent("monitor1", check_interval=5.0)
 
+system.add_agent(custom_agent)
 system.add_agent(collector)
 system.add_agent(researcher)
-system.add_agent(monitor)
 
 # Execute agents
 results = system.run_parallel()  # Run simultaneously
-# results = system.run_sequential()  # Run one by one
-# results = system.run_monitored()  # Run with system management
-
 print(f"Results: {results['successful']} successful, {results['failed']} failed")
 ```
 
