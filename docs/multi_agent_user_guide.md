@@ -192,6 +192,58 @@ collector.session.save("@shared_data", "収集済みデータ")
 shared_data = researcher.session.get("@shared_data")
 ```
 
+### SystemSessionでの統一的なグローバル変数管理
+
+エージェント間での情報共有をより直感的に行うためにSystemSessionを使用できます：
+
+```python
+from system_session import SystemSession
+
+# システム全体の共有状態管理
+system_state = SystemSession()
+
+# グローバル変数設定（@プレフィックス自動処理）
+system_state.set_global("pipeline_status", "processing")
+system_state.set_global("current_phase", "data_collection")
+system_state.set_global("error_count", "0")
+
+# 自然言語マクロとの一貫性
+system_state.execute("Save 'high_priority' to {{@alert_level}}")
+
+# エージェントから統一的にアクセス
+class DataCollectorAgent(BaseAgent):
+    def run(self):
+        # SystemSessionで状態確認
+        system = SystemSession()
+        current_phase = system.get_global("current_phase")  # "data_collection"
+        
+        if current_phase == "data_collection":
+            # データ収集実行
+            self.execute_macro("Collect data and save to {{collected_data}}")
+            
+            # 次のフェーズに更新
+            system.set_global("current_phase", "analysis")
+            system.set_global("pipeline_status", "analysis_ready")
+
+# 他のエージェントからも同じインターフェースで参照
+class AnalysisAgent(BaseAgent):
+    def run(self):
+        system = SystemSession()
+        
+        # 統一的なインターフェースで状態確認
+        status = system.get_global("pipeline_status")  # "analysis_ready"
+        phase = system.get_global("current_phase")     # "analysis"
+        
+        if status == "analysis_ready":
+            # 分析実行
+            self.execute_macro("Perform analysis on collected data")
+```
+
+**SystemSession使用のメリット**：
+- **一貫性**: 自然言語マクロの`{{@variable}}`とPythonの`system.get_global("variable")`が統一
+- **認知負荷軽減**: @プレフィックスの自動処理により記述が簡潔
+- **エラー削減**: インターフェース統一により変数アクセスミスを防止
+
 ### アラート機能
 
 ```python

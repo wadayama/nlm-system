@@ -14,11 +14,25 @@ Save the current date '2025-08-07' to {{today}}.
 
 ## Global Variables
 
-Save 'production' to {{global.environment}}.
+Save 'production' to {{@environment}}.
 
-Get {{global.environment}}.
+Get {{@environment}}.
 
-Save database connection string 'postgres://localhost/mydb' to {{global.db_url}}.
+Save database connection string 'postgres://localhost/mydb' to {{@db_url}}.
+
+Get {{@db_url}} for database connection.
+
+### SystemSession Unified Interface
+
+Using SystemSession for consistent global variable access between Python and natural language macros:
+
+Set project configuration to 'AI Research 2024' in {{@project_name}}.
+
+Save system status 'active' to {{@system_status}}.
+
+Store API version '2.1' in {{@api_version}}.
+
+Get {{@project_name}}, {{@system_status}}, and {{@api_version}} for system initialization.
 
 ## Cross-Session Communication
 

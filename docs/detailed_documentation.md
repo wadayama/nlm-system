@@ -53,6 +53,50 @@ print(session2.get("@budget_approved"))   # True
 # "global:budget_approved" = True
 ```
 
+**SystemSession - Unified Global Variable Access:**
+
+For cleaner global variable management with consistent @-prefixed syntax:
+
+```python
+from system_session import SystemSession
+
+# SystemSession provides unified @-syntax for both Python and natural language
+system = SystemSession()
+
+# Set global variables - both styles work identically
+system.set_global("project_deadline", "2024-12-31")    # Auto @-prefix
+system.set_global("@budget_approved", "true")          # Explicit @-prefix
+
+# Get global variables - consistent interface
+deadline = system.get_global("project_deadline")       # Returns "2024-12-31"
+approved = system.get_global("@budget_approved")       # Returns "true"
+
+# Natural language macros use the same @-syntax
+system.execute("Save 'completed' to {{@task_status}}")
+status = system.get_global("task_status")              # Returns "completed"
+
+# Interface consistency between natural language and Python:
+# Natural Language: {{@variable_name}}
+# Python:          system.get_global("variable_name")
+# Both access the same underlying global:variable_name storage
+
+# List all global variables with clean display
+globals_dict = system.list_globals()
+# Returns: {"project_deadline": "2024-12-31", "budget_approved": "true", "task_status": "completed"}
+
+# SystemSession inherits all NLMSession functionality
+system.set_reasoning_effort("high")
+system.execute("Process the data using configuration from {{@config}}")
+system.reset_context()  # Clear conversation history
+```
+
+**Key SystemSession Benefits:**
+- **Interface Consistency**: Natural language `{{@var}}` matches Python `system.get_global("var")`
+- **Reduced Cognitive Load**: Single @-prefixed syntax pattern across all interfaces
+- **Auto @-Handling**: `set_global("var")` automatically becomes `@var` internally
+- **Full Inheritance**: All NLMSession features (execute, settings, context) work unchanged
+- **Backward Compatible**: Existing NLMSession code continues to work
+
 **Namespace isolation prevents conflicts:**
 ```python
 # Different teams can work independently
