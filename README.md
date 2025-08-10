@@ -73,6 +73,42 @@ print(data_session.get("@model_status"))   # "training"
 print(model_session.get("@model_status"))  # "training"
 ```
 
+## Multi-Agent System
+
+Execute multiple agents in parallel for complex workflows:
+
+```python
+from multi_agent_system import MultiAgentSystem
+from agent_examples import DataCollectorAgent, ResearchAgent, MonitorAgent
+
+# Create system
+system = MultiAgentSystem("my_project")
+
+# Add various agents
+collector = DataCollectorAgent("collector1", "database_source")
+researcher = ResearchAgent("researcher1", "AI trends analysis")
+monitor = MonitorAgent("monitor1", check_interval=5.0)
+
+system.add_agent(collector)
+system.add_agent(researcher)
+system.add_agent(monitor)
+
+# Execute agents
+results = system.run_parallel()  # Run simultaneously
+# results = system.run_sequential()  # Run one by one
+# results = system.run_monitored()  # Run with system management
+
+print(f"Results: {results['successful']} successful, {results['failed']} failed")
+```
+
+**Available Agent Types:**
+- `DataCollectorAgent`: One-time data collection
+- `MonitorAgent`: Continuous system monitoring
+- `ResearchAgent`: Multi-phase research workflow
+- `CoordinatorAgent`: Team management and coordination
+
+For detailed multi-agent usage, see [docs/multi_agent_user_guide.md](docs/multi_agent_user_guide.md)
+
 ## Executing Multi-line Macro Files
 
 ### From Python Code
