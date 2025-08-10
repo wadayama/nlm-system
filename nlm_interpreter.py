@@ -469,7 +469,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             if not self.disable_history:
                 self.conversation_history.add_message("user", f"Execute this macro:\n\n{macro_content}")
             
-            max_turns = 10  # Allow more complex operations while preventing infinite loops
+            max_turns = 50  # Allow more complex operations while preventing infinite loops
             turn = 0
             all_results = []
             
