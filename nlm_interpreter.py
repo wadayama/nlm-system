@@ -14,6 +14,7 @@ import re
 from openai import OpenAI
 from variable_db import VariableDB
 from variable_history import VariableHistoryManager
+from conversation_history import ConversationHistory
 
 
 class NLMSession:
@@ -24,7 +25,7 @@ class NLMSession:
     GLOBAL_PREFIX = "global"
     AT_PREFIX = "@"
     
-    def __init__(self, namespace=None, model=None, endpoint=None, api_key=None):
+    def __init__(self, namespace=None, model=None, endpoint=None, api_key=None, disable_history=False):
         """Initialize NLM session
         
         Args:
@@ -32,6 +33,7 @@ class NLMSession:
             model: Model name - supports gpt-5, gpt-5-mini, gpt-5-nano, gpt-oss:20b (default)
             endpoint: API endpoint (auto-determined by model)  
             api_key: API key (auto-loaded for OpenAI models)
+            disable_history: If True, disable conversation history (default: False)
         """
         self.namespace = namespace or str(uuid.uuid4())[:8]
         
@@ -62,6 +64,15 @@ class NLMSession:
         # Initialize variable management
         self.variable_db = VariableDB("variables.db")
         self.history_manager = VariableHistoryManager("variables.db")
+        
+        # Initialize conversation history
+        self.disable_history = disable_history
+        if not self.disable_history:
+            self.conversation_history = ConversationHistory(self.namespace, "variables.db")
+            print(f"📚 Conversation history enabled for namespace: {self.namespace}")
+        else:
+            self.conversation_history = None
+            print(f"🚫 Conversation history disabled")
         
         # System prompt for natural language macro execution
         self.system_prompt = """You are a natural language macro interpreter that processes {{variable}} syntax.
@@ -433,11 +444,23 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         Returns:
             String result from macro execution
         """
-        try:            
-            messages = [
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": f"Execute this macro:\n\n{macro_content}"}
-            ]
+        try:
+            # Build messages with conversation history if enabled
+            if not self.disable_history and self.conversation_history.has_messages():
+                # Start with system prompt + conversation history
+                messages = [{"role": "system", "content": self.system_prompt}]
+                messages.extend(self.conversation_history.get_messages())
+                messages.append({"role": "user", "content": f"Execute this macro:\n\n{macro_content}"})
+            else:
+                # Traditional mode (no history)
+                messages = [
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": f"Execute this macro:\n\n{macro_content}"}
+                ]
+            
+            # Save user message to history if enabled
+            if not self.disable_history:
+                self.conversation_history.add_message("user", f"Execute this macro:\n\n{macro_content}")
             
             max_turns = 10  # Allow more complex operations while preventing infinite loops
             turn = 0
@@ -489,6 +512,12 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
                     # No more tool calls, add final response
                     if message.content:
                         all_results.append(message.content)
+                    
+                    # Save final assistant response to history
+                    if not self.disable_history:
+                        final_response = "\n".join(all_results) if all_results else "Macro executed (no output)"
+                        self.conversation_history.add_message("assistant", final_response)
+                    
                     break
             
             return "\n".join(all_results) if all_results else "Macro executed (no output)"
@@ -654,6 +683,110 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
                     self._log_variable_change(full_key, all_vars[full_key], None)
         
         return count
+    
+    # Conversation history management methods
+    def reset_context(self):
+        """Clear all conversation history for this session
+        
+        Returns:
+            True if successful, False if history is disabled
+        """
+        if self.disable_history:
+            print("⚠️ Conversation history is disabled")
+            return False
+        
+        self.conversation_history.clear_all()
+        print(f"🔄 Conversation context reset for namespace: {self.namespace}")
+        return True
+    
+    def trim_context(self, keep_recent: int):
+        """Keep only the most recent N messages
+        
+        Args:
+            keep_recent: Number of recent messages to keep
+            
+        Returns:
+            True if successful, False if history is disabled
+        """
+        if self.disable_history:
+            print("⚠️ Conversation history is disabled")
+            return False
+        
+        # Get current message count
+        stats = self.conversation_history.get_stats()
+        total_messages = stats['total_messages']
+        
+        if total_messages <= keep_recent:
+            print(f"📝 No trimming needed. Current messages: {total_messages}")
+            return True
+        
+        # Remove old messages
+        remove_count = total_messages - keep_recent
+        self.conversation_history.clear_recent(remove_count)
+        print(f"✂️ Trimmed {remove_count} messages, kept {keep_recent} recent messages")
+        return True
+    
+    def get_context_info(self) -> dict:
+        """Get information about current conversation context
+        
+        Returns:
+            Dictionary containing context information
+        """
+        if self.disable_history:
+            return {
+                'history_enabled': False,
+                'message_count': 0,
+                'estimated_tokens': 0,
+                'warning': 'Conversation history is disabled'
+            }
+        
+        stats = self.conversation_history.get_stats()
+        
+        # Add performance warnings
+        warnings = []
+        if stats['estimated_tokens'] > 50000:
+            warnings.append("Very large context - consider reset_context()")
+        elif stats['estimated_tokens'] > 20000:
+            warnings.append("Large context - monitor performance")
+        
+        if stats['total_messages'] > 100:
+            warnings.append("Many messages - consider trim_context()")
+        
+        context_info = {
+            'history_enabled': True,
+            'namespace': self.namespace,
+            'message_count': stats['total_messages'],
+            'estimated_tokens': stats['estimated_tokens'],
+            'role_counts': stats['role_counts'],
+            'earliest_message': stats['earliest_message'],
+            'latest_message': stats['latest_message']
+        }
+        
+        if warnings:
+            context_info['warnings'] = warnings
+        
+        return context_info
+    
+    def export_context(self, filepath: str) -> bool:
+        """Export conversation history to file
+        
+        Args:
+            filepath: Path to output JSON file
+            
+        Returns:
+            True if successful, False if failed or history disabled
+        """
+        if self.disable_history:
+            print("⚠️ Conversation history is disabled")
+            return False
+        
+        success = self.conversation_history.export_to_file(filepath)
+        if success:
+            print(f"📁 Conversation history exported to: {filepath}")
+        else:
+            print(f"❌ Failed to export conversation history")
+        
+        return success
 
 
 def nlm_execute(macro_content, namespace=None, model=None, endpoint=None):
