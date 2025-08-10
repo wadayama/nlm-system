@@ -280,15 +280,16 @@ class ResearchAgent(BaseAgent):
         """Notify other agents that research is complete"""
         report = self.session.get("final_report")
         if report:
-            # Set global flag
+            # Broadcast completion to all agents using new broadcast method
+            self.broadcast(
+                f"🔬 Research completed: '{self.research_topic}' by {self.agent_id}. "
+                f"Report available with {len(report)} characters."
+            )
+            
+            # Still set specific global variables for easy access
             self.session.save("@latest_research_report", report[:500])  # First 500 chars
             self.session.save("@latest_research_topic", self.research_topic)
             self.session.save("@latest_research_agent", self.agent_id)
-            
-            # Send message to coordinator if exists
-            if self.get_agent_status("coordinator") != "unknown":
-                self.send_message("coordinator", 
-                    f"Research complete on '{self.research_topic}'. Report available.")
 
 
 class CoordinatorAgent(BaseAgent):

@@ -25,7 +25,8 @@ class NLMSession:
     GLOBAL_PREFIX = "global"
     AT_PREFIX = "@"
     
-    def __init__(self, namespace=None, model=None, endpoint=None, api_key=None, disable_history=False):
+    def __init__(self, namespace=None, model=None, endpoint=None, api_key=None, disable_history=False, 
+                 reasoning_effort="low", verbosity="low"):
         """Initialize NLM session
         
         Args:
@@ -34,6 +35,8 @@ class NLMSession:
             endpoint: API endpoint (auto-determined by model)  
             api_key: API key (auto-loaded for OpenAI models)
             disable_history: If True, disable conversation history (default: False)
+            reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
+            verbosity: Response verbosity - "low", "medium", "high" (default: "low")
         """
         self.namespace = namespace or str(uuid.uuid4())[:8]
         
@@ -42,6 +45,10 @@ class NLMSession:
         
         # Default model
         self.model = model or "gpt-oss:20b"
+        
+        # Store reasoning and verbosity settings
+        self.reasoning_effort = reasoning_effort
+        self.verbosity = verbosity
         
         if self.model in openai_models:
             # OpenAI API configuration
@@ -475,16 +482,14 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
                     "tools": self.TOOLS_DEFINITION
                 }
                 
-                # Add reasoning_effort and verbosity for all models to improve latency
-                # Works for both OpenAI models and local models (LMStudio/Ollama)
-                # 'low' provides good balance between speed and quality
-                request_params["reasoning_effort"] = "low"
+                # Add reasoning_effort and verbosity parameters
+                # Configurable via session settings for experimentation
+                request_params["reasoning_effort"] = self.reasoning_effort
                 
-                # Add verbosity to reduce response length and improve latency
-                # OpenAI models support this parameter
+                # Add verbosity parameter for OpenAI models
                 openai_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
                 if self.model in openai_models:
-                    request_params["verbosity"] = "low"
+                    request_params["verbosity"] = self.verbosity
                 
                 response = self.client.chat.completions.create(**request_params)
                 
@@ -787,6 +792,62 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             print(f"❌ Failed to export conversation history")
         
         return success
+    
+    def set_reasoning_effort(self, level: str):
+        """Set reasoning effort level
+        
+        Args:
+            level: "low", "medium", or "high"
+        """
+        valid_levels = ["low", "medium", "high"]
+        if level not in valid_levels:
+            raise ValueError(f"Invalid reasoning effort level: {level}. Must be one of {valid_levels}")
+        
+        old_level = self.reasoning_effort
+        self.reasoning_effort = level
+        print(f"🧠 Reasoning effort changed: {old_level} → {level}")
+    
+    def set_verbosity(self, level: str):
+        """Set verbosity level
+        
+        Args:
+            level: "low", "medium", or "high"
+        """
+        valid_levels = ["low", "medium", "high"]
+        if level not in valid_levels:
+            raise ValueError(f"Invalid verbosity level: {level}. Must be one of {valid_levels}")
+        
+        old_level = self.verbosity
+        self.verbosity = level
+        print(f"🗣 Verbosity changed: {old_level} → {level}")
+    
+    def get_settings(self) -> dict:
+        """Get current session settings
+        
+        Returns:
+            Dictionary with current settings
+        """
+        return {
+            "namespace": self.namespace,
+            "model": self.model,
+            "endpoint": self.endpoint,
+            "reasoning_effort": self.reasoning_effort,
+            "verbosity": self.verbosity,
+            "disable_history": self.disable_history
+        }
+    
+    def set_settings(self, reasoning_effort: str = None, verbosity: str = None):
+        """Set multiple settings at once
+        
+        Args:
+            reasoning_effort: New reasoning effort level (optional)
+            verbosity: New verbosity level (optional)
+        """
+        if reasoning_effort is not None:
+            self.set_reasoning_effort(reasoning_effort)
+        
+        if verbosity is not None:
+            self.set_verbosity(verbosity)
 
 
 def nlm_execute(macro_content, namespace=None, model=None, endpoint=None):

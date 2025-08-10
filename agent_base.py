@@ -23,15 +23,18 @@ class BaseAgent:
         logger: Logger instance for this agent
     """
     
-    def __init__(self, agent_id: str, model: str = None):
+    def __init__(self, agent_id: str, model: str = None, reasoning_effort: str = "low", verbosity: str = "low"):
         """Initialize the agent
         
         Args:
             agent_id: Unique identifier for the agent (becomes NLM namespace)
             model: LLM model to use (optional, uses default if not specified)
+            reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
+            verbosity: Response verbosity - "low", "medium", "high" (default: "low")
         """
         self.agent_id = agent_id
-        self.session = NLMSession(namespace=agent_id, model=model)
+        self.session = NLMSession(namespace=agent_id, model=model, 
+                                 reasoning_effort=reasoning_effort, verbosity=verbosity)
         self.running = False
         self.logger = logging.getLogger(f"Agent.{agent_id}")
         
@@ -151,6 +154,84 @@ class BaseAgent:
         
         self.logger.info("Cleared all messages")
     
+    def broadcast(self, message: str):
+        """Broadcast a message to all agents in the system
+        
+        Uses a global broadcast mechanism that can be checked by all agents.
+        Each broadcast gets a unique timestamp to prevent overwrites.
+        
+        Args:
+            message: Message to broadcast to all agents
+        """
+        import time
+        
+        # Create unique broadcast ID with timestamp
+        timestamp = datetime.now()
+        broadcast_id = str(int(time.time() * 1000000))
+        broadcast_key = f"broadcast_{self.agent_id}_{broadcast_id}"
+        
+        # Store broadcast message with metadata
+        self.session.save(f"@{broadcast_key}", message)
+        self.session.save(f"@{broadcast_key}_timestamp", str(timestamp))
+        self.session.save(f"@{broadcast_key}_sender", self.agent_id)
+        
+        # Update latest broadcast pointer for easy access
+        self.session.save("@latest_broadcast_message", message)
+        self.session.save("@latest_broadcast_sender", self.agent_id)
+        self.session.save("@latest_broadcast_time", str(timestamp))
+        
+        self.logger.info(f"Broadcasted message: {message[:50]}...")
+    
+    def check_broadcasts(self, since_timestamp: str = None) -> list:
+        """Check for broadcast messages from all agents
+        
+        Args:
+            since_timestamp: Only return broadcasts after this timestamp (ISO format)
+            
+        Returns:
+            List of broadcast dictionaries with 'sender', 'message', and 'timestamp' keys
+        """
+        broadcasts = []
+        all_globals = self.session.list_global()
+        
+        # Look for broadcast messages
+        for key, value in all_globals.items():
+            if key.startswith("broadcast_") and not key.endswith(("_timestamp", "_sender")):
+                # Get metadata
+                timestamp_key = f"{key}_timestamp"
+                sender_key = f"{key}_sender"
+                
+                timestamp = all_globals.get(timestamp_key, "unknown")
+                sender = all_globals.get(sender_key, "unknown")
+                
+                # Filter by timestamp if requested
+                if since_timestamp:
+                    try:
+                        from datetime import datetime
+                        broadcast_time = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                        since_time = datetime.fromisoformat(since_timestamp.replace('Z', '+00:00'))
+                        if broadcast_time <= since_time:
+                            continue
+                    except:
+                        pass  # Skip filtering on parse error
+                
+                broadcasts.append({
+                    "sender": sender,
+                    "message": value,
+                    "timestamp": timestamp
+                })
+        
+        # Sort by timestamp if possible
+        try:
+            broadcasts.sort(key=lambda x: x["timestamp"])
+        except:
+            pass
+        
+        if broadcasts:
+            self.logger.info(f"Found {len(broadcasts)} broadcast messages")
+        
+        return broadcasts
+    
     # === State Management Methods ===
     
     def get_status(self) -> str:
@@ -242,6 +323,41 @@ class BaseAgent:
             info["stop_time"] = stop_time
         
         return info
+    
+    # === Settings Management Methods ===
+    
+    def set_reasoning_effort(self, level: str):
+        """Set reasoning effort level for this agent
+        
+        Args:
+            level: "low", "medium", or "high"
+        """
+        self.session.set_reasoning_effort(level)
+    
+    def set_verbosity(self, level: str):
+        """Set verbosity level for this agent
+        
+        Args:
+            level: "low", "medium", or "high"  
+        """
+        self.session.set_verbosity(level)
+    
+    def get_settings(self) -> dict:
+        """Get current agent settings
+        
+        Returns:
+            Dictionary with current settings
+        """
+        return self.session.get_settings()
+    
+    def set_settings(self, reasoning_effort: str = None, verbosity: str = None):
+        """Set multiple settings at once
+        
+        Args:
+            reasoning_effort: New reasoning effort level (optional)
+            verbosity: New verbosity level (optional) 
+        """
+        self.session.set_settings(reasoning_effort=reasoning_effort, verbosity=verbosity)
     
     def __repr__(self):
         """String representation of the agent"""
