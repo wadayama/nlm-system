@@ -266,7 +266,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         raise ValueError(
             "OpenAI API key not found. Please create .openai_key file or "
             "~/.config/nlm/openai_key with your API key. "
-            "Run 'python setup_openai.py' for setup assistance."
+            "Run 'uv run setup_openai.py' for setup assistance."
         )
 
     def _show_openai_warning(self):

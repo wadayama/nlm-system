@@ -5,7 +5,6 @@ import os
 import sys
 import tempfile
 import uuid
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from nlm_interpreter import NLMSession, nlm_execute
 

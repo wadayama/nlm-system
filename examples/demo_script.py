@@ -3,7 +3,6 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from nlm_interpreter import NLMSession, nlm_execute
 
@@ -209,9 +208,9 @@ def run_all_demos():
     
     print("🎉 Demo completed!")
     print("\nTo explore more:")
-    print("  python nlm_interpreter.py 'Save hello to greeting'")
-    print("  python nlm_interpreter.py -f examples/basic_usage.md")
-    print("  python history_viewer.py history")
+    print("  uv run nlm_interpreter.py 'Save hello to greeting'")
+    print("  uv run nlm_interpreter.py -f examples/basic_usage.md")
+    print("  uv run history_viewer.py history")
 
 
 if __name__ == "__main__":

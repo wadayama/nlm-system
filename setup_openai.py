@@ -73,7 +73,7 @@ def setup_openai_key():
         print("\n" + "-" * 40)
         print("Usage examples:")
         print("  python -c \"from nlm_interpreter import NLMSession; s=NLMSession(model='gpt-5-nano'); print('OpenAI ready!')\"")
-        print("  python nlm_interpreter.py -m gpt-5-mini \"Save 'test' to {{var}}\"")
+        print("  uv run nlm_interpreter.py -m gpt-5-mini \"Save 'test' to {{var}}\"")
         print("\nFor local LLM (no charges):")
         print("  python -c \"from nlm_interpreter import NLMSession; s=NLMSession(); print('Local LLM ready!')\"")
         
@@ -121,7 +121,7 @@ def check_openai_setup():
     
     if not local_key.exists() and not global_key.exists():
         print("\n💡 No OpenAI API key found. Run setup to configure:")
-        print("   python setup_openai.py")
+        print("   uv run setup_openai.py")
     else:
         print("\n🎉 OpenAI API key is configured!")
 

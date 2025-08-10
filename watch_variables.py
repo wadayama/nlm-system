@@ -268,12 +268,12 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python watch_variables.py                  # Single snapshot
-  python watch_variables.py -c              # Continuous monitoring  
-  python watch_variables.py -c -i 0.5       # Monitor every 0.5 seconds
-  python watch_variables.py --once -f json  # JSON format snapshot
-  python watch_variables.py -w name         # Watch specific variable 'name'
-  python watch_variables.py --info          # Database statistics
+  uv run watch_variables.py                  # Single snapshot
+  uv run watch_variables.py -c              # Continuous monitoring  
+  uv run watch_variables.py -c -i 0.5       # Monitor every 0.5 seconds
+  uv run watch_variables.py --once -f json  # JSON format snapshot
+  uv run watch_variables.py -w name         # Watch specific variable 'name'
+  uv run watch_variables.py --info          # Database statistics
         """
     )
     

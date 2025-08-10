@@ -6,7 +6,6 @@ import sys
 import subprocess
 import tempfile
 import sqlite3
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from nlm_interpreter import _handle_list_sessions, _execute_single_macro, _execute_from_file
 from variable_db import VariableDB

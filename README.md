@@ -2,6 +2,24 @@
 
 A Python orchestrator for natural language macros with unified variable syntax, session management, and OpenAI-compatible API integration.
 
+## Prerequisites
+
+**⚠️ Important: This project requires [uv](https://github.com/astral-sh/uv) for execution**
+
+```bash
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# All Python scripts must be run with uv:
+uv run script.py        # ✅ Correct
+python script.py        # ❌ Won't work with src/ structure
+```
+
+**Why uv is required:**
+- Project uses `src/` layout with automatic package discovery
+- uv handles Python path configuration from `pyproject.toml`  
+- Standard `python` command cannot find modules in `src/` directory
+
 ## Features
 
 - **Natural Language Macros**: Execute human-like instructions with `{{variable}}` syntax
@@ -13,7 +31,11 @@ A Python orchestrator for natural language macros with unified variable syntax, 
 ## Quick Start
 
 ```bash
-pip install openai
+# Install dependencies
+uv sync
+
+# Verify installation
+uv run python -c "from nlm_interpreter import NLMSession; print('NLM System ready!')"
 ```
 
 ## Python API Usage

@@ -3,7 +3,6 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from nlm_interpreter import NLMSession
 
@@ -101,13 +100,13 @@ def test_complex_expansion_patterns():
         
         # Set up variables with special characters
         session.save("path", "/data/file.txt")
-        session.save("command", "python script.py")
+        session.save("command", "uv run script.py")
         session.save("@config_file", "config.json")
         session.save("json_data", '{"key": "value"}')
         
         # Test with special characters
         result = session._expand_variables("Execute {{command}} with {{path}}")
-        expected = "Execute python script.py with /data/file.txt"
+        expected = "Execute uv run script.py with /data/file.txt"
         assert result == expected, f"Expected '{expected}', got '{result}'"
         
         # Test with JSON-like content
@@ -117,7 +116,7 @@ def test_complex_expansion_patterns():
         
         # Test with mixed local and global
         result = session._expand_variables("Run {{command}} using config {{@config_file}}")
-        expected = "Run python script.py using config config.json"
+        expected = "Run uv run script.py using config config.json"
         assert result == expected, f"Expected '{expected}', got '{result}'"
         
         print("✓ Complex expansion patterns work correctly")

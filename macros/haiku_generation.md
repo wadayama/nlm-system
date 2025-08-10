@@ -1,7 +1,7 @@
 # Haiku Generation
 
 This file contains natural language macro instructions for generating haikus.
-Execute this file with: `python nlm_interpreter.py -f haiku_generation.md`
+Execute this file with: `uv run nlm_interpreter.py -f haiku_generation.md`
 
 ## Preparation
 

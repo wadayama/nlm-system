@@ -6,7 +6,6 @@ import argparse
 from pathlib import Path
 
 # Add parent directory to path for NLM system imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from system_session import SystemSession
 from multi_agent_system import MultiAgentSystem

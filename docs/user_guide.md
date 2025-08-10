@@ -271,19 +271,19 @@ View and analyze variable change history:
 
 ```bash
 # Show recent changes
-python history_viewer.py recent --hours 24
+uv run history_viewer.py recent --hours 24
 
 # Show history for specific namespace
-python history_viewer.py history -n my_session
+uv run history_viewer.py history -n my_session
 
 # Show statistics
-python history_viewer.py stats
+uv run history_viewer.py stats
 
 # Search for changes
-python history_viewer.py search "Alice"
+uv run history_viewer.py search "Alice"
 
 # Export to file
-python history_viewer.py export history.json -f json
+uv run history_viewer.py export history.json -f json
 ```
 
 ## Natural Language Macro Examples
@@ -379,13 +379,13 @@ Show me the current global {{@project_name}} and {{@status}}
 **Command Line:**
 ```bash
 # Execute a macro file
-python nlm_interpreter.py -f basic_workflow.md
+uv run nlm_interpreter.py -f basic_workflow.md
 
 # Execute with custom model/endpoint
-python nlm_interpreter.py -f workflow.md -m llama3.1:8b -e http://localhost:11434/v1
+uv run nlm_interpreter.py -f workflow.md -m llama3.1:8b -e http://localhost:11434/v1
 
 # Execute with specific namespace
-python nlm_interpreter.py -f setup.md --namespace "production_setup"
+uv run nlm_interpreter.py -f setup.md --namespace "production_setup"
 ```
 
 **Python API:**
@@ -464,16 +464,16 @@ project/
 **Sequential Execution:**
 ```bash
 # Execute setup macros
-python nlm_interpreter.py -f macros/setup/environment.md
-python nlm_interpreter.py -f macros/setup/database.md
+uv run nlm_interpreter.py -f macros/setup/environment.md
+uv run nlm_interpreter.py -f macros/setup/database.md
 
 # Run main workflows
-python nlm_interpreter.py -f macros/workflows/data_processing.md
-python nlm_interpreter.py -f macros/workflows/model_training.md
-python nlm_interpreter.py -f macros/workflows/evaluation.md
+uv run nlm_interpreter.py -f macros/workflows/data_processing.md
+uv run nlm_interpreter.py -f macros/workflows/model_training.md
+uv run nlm_interpreter.py -f macros/workflows/evaluation.md
 
 # Cleanup
-python nlm_interpreter.py -f macros/cleanup/reset.md
+uv run nlm_interpreter.py -f macros/cleanup/reset.md
 ```
 
 ### Best Practices

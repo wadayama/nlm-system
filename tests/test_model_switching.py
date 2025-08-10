@@ -8,7 +8,6 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 # Add parent directory to path for importing
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from nlm_interpreter import NLMSession
 

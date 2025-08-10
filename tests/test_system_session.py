@@ -10,7 +10,6 @@ from pathlib import Path
 import logging
 
 # Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from system_session import SystemSession
 from nlm_interpreter import NLMSession
