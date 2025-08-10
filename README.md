@@ -73,6 +73,49 @@ print(data_session.get("@model_status"))   # "training"
 print(model_session.get("@model_status"))  # "training"
 ```
 
+## SystemSession - Unified Global Variable Access
+
+For cleaner global variable management with unified @-prefixed syntax:
+
+```python
+from system_session import SystemSession
+
+# Create system session with unified @-syntax
+system = SystemSession()
+
+# Set global variables - both ways work the same
+system.set_global("status", "active")        # Auto @-prefix
+system.set_global("@config", "production")   # Explicit @-prefix
+
+# Get global variables - consistent interface
+status = system.get_global("status")         # Returns "active"  
+config = system.get_global("@config")        # Returns "production"
+
+# Natural language macros use same @-syntax
+system.execute("Save 'ready' to {{@system_status}}")
+system_status = system.get_global("system_status")  # Returns "ready"
+
+# List all global variables (clean keys without @)
+globals_dict = system.list_globals()
+# Returns: {"status": "active", "config": "production", "system_status": "ready"}
+
+# Context manager support
+with SystemSession() as system:
+    system.set_global("temp_config", "test_mode")
+    system.execute("Process configuration from {{@temp_config}}")
+    
+# Inherits all NLMSession functionality
+system.set_reasoning_effort("high")
+system.set_verbosity("medium")
+system.reset_context()  # Clear conversation history
+```
+
+**Key Benefits:**
+- **Interface Consistency**: `{{@variable}}` in macros matches `system.get_global("@variable")` in Python
+- **Auto @ Handling**: `set_global("var")` automatically becomes `@var` internally
+- **Full Inheritance**: All NLMSession features (execute, settings, context) work unchanged
+- **Backward Compatible**: Existing code continues to work without changes
+
 ## Multi-Agent System
 
 Execute multiple agents in parallel for complex workflows:
