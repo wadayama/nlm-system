@@ -103,12 +103,14 @@ class DiceGameAgent(BaseAgent):
             return 0
         elif action == "even_bet":
             if dice_result % 2 == 0:  # Even numbers: 2, 4, 6
-                return bet_amount * 2 * multiplier
+                # Win: get 2x payout, but lose original bet, so net = bet_amount * (2-1) = bet_amount
+                return bet_amount * 1 * multiplier
             else:
                 return -bet_amount
         elif action == "specific_number_bet":
             if dice_result == target_number:
-                return bet_amount * 5 * multiplier
+                # Win: get 5x payout, but lose original bet, so net = bet_amount * (5-1) = bet_amount * 4
+                return bet_amount * 4 * multiplier
             else:
                 return -bet_amount
         
@@ -126,7 +128,10 @@ class DiceGameAgent(BaseAgent):
             return f"{action.upper()}({bet_amount})"
     
     def make_decision(self):
-        """Use natural language macros to make strategic betting decisions"""
+        """Use natural language macros to make betting decisions"""
+        import time
+        start_time = time.time()
+        
         current_round = int(self.session.get("round") or 0)
         current_assets = int(self.session.get("assets") or 0)
         target = int(self.session.get("target_chips") or 30)
@@ -138,22 +143,29 @@ class DiceGameAgent(BaseAgent):
         self.session.save("target_chips", target)
         self.session.save("remaining_rounds", remaining_rounds)
         
+        prep_time = time.time() - start_time
+        self.logger.debug(f"Decision prep time: {prep_time:.2f}s")
+        
         # Natural language macro for decision making
         decision_prompt = """
-        Analyze the current game situation and make a strategic betting decision.
+        You are playing a dice betting game. Your mission is critical.
         
+        WIN CONDITION: You MUST have 30+ chips after round 10 to WIN.
         Current status:
         - Round: {{current_round}}/10
-        - Assets: {{current_assets}} chips
-        - Target: {{target_chips}}+ chips
+        - Assets: {{current_assets}} chips (CURRENT)
+        - Target: 30 chips (REQUIRED TO WIN)
+        - Need: {{target_chips}} - {{current_assets}} = MORE CHIPS NEEDED
         - Remaining rounds: {{remaining_rounds}}
         
-        Game rules reminder:
+        Game rules:
         - Even bet: Win on dice 2,4,6 - pays 2x (4x in final round)
         - Specific number bet: Win on exact number - pays 5x (10x in final round)  
         - Pass: Skip betting - no risk, no reward
         - Final round (round 10) has double payouts
+        - Bankruptcy (0 chips) = immediate game over
         
+        Remember: The goal is to REACH 30+ chips, not to maximize chips.
         Analyze the situation and decide:
         - Action: even_bet, specific_number_bet, or pass
         - Bet amount: 1 to {{current_assets}} chips
@@ -164,11 +176,18 @@ class DiceGameAgent(BaseAgent):
         - {{action}} - your chosen action
         - {{bet_amount}} - amount to bet
         - {{target_number}} - target number if specific bet
-        - {{decision_reason}} - brief explanation of strategy
+        - {{decision_reason}} - brief explanation of your reasoning
         """
         
         # Execute decision-making macro
+        llm_start = time.time()
+        print(f"  🔄 Calling LLM for decision...")
         result = self.execute_macro(decision_prompt)
+        llm_time = time.time() - llm_start
+        
+        total_time = time.time() - start_time
+        print(f"  ⏱️  Decision timing: LLM={llm_time:.1f}s, Total={total_time:.1f}s")
+        
         return result
     
     def play_round(self):
@@ -281,9 +300,9 @@ class DiceGameAgent(BaseAgent):
             if not success:
                 break
                 
-            # Brief pause for readability
-            import time
-            time.sleep(0.5)
+            # Brief pause for readability (optional)
+            # import time
+            # time.sleep(0.5)
         
         # Final status
         final_assets = int(self.session.get("assets") or 0)

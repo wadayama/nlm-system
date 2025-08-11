@@ -23,7 +23,7 @@ class BaseAgent:
         logger: Logger instance for this agent
     """
     
-    def __init__(self, agent_id: str, model: str = None, reasoning_effort: str = "low", verbosity: str = "low", disable_history: bool = False):
+    def __init__(self, agent_id: str, model: str = None, reasoning_effort: str = "low", verbosity: str = "low", disable_history: bool = True):
         """Initialize the agent
         
         Args:
@@ -31,7 +31,7 @@ class BaseAgent:
             model: LLM model to use (optional, uses default if not specified)
             reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
             verbosity: Response verbosity - "low", "medium", "high" (default: "low")
-            disable_history: If True, disable conversation history (default: False)
+            disable_history: If True, disable conversation history (default: True for performance)
         """
         self.agent_id = agent_id
         self.session = NLMSession(namespace=agent_id, model=model, 

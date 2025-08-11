@@ -25,7 +25,7 @@ class NLMSession:
     GLOBAL_PREFIX = "global"
     AT_PREFIX = "@"
     
-    def __init__(self, namespace=None, model=None, endpoint=None, api_key=None, disable_history=False, 
+    def __init__(self, namespace=None, model=None, endpoint=None, api_key=None, disable_history=True, 
                  reasoning_effort="low", verbosity="low"):
         """Initialize NLM session
         
@@ -34,7 +34,7 @@ class NLMSession:
             model: Model name - supports gpt-5, gpt-5-mini, gpt-5-nano, gpt-oss:20b (default)
             endpoint: API endpoint (auto-determined by model)  
             api_key: API key (auto-loaded for OpenAI models)
-            disable_history: If True, disable conversation history (default: False)
+            disable_history: If True, disable conversation history (default: True for performance)
             reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
             verbosity: Response verbosity - "low", "medium", "high" (default: "low")
         """
