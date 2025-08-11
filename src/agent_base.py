@@ -2,7 +2,7 @@
 """Base Agent class for multi-agent system
 
 Provides the foundation for all agent implementations in the NLM system.
-Each agent has its own NLM session (namespace) for state management and conversation history.
+Each agent has its own NLM session (namespace) for state management.
 """
 
 from nlm_interpreter import NLMSession
@@ -23,7 +23,7 @@ class BaseAgent:
         logger: Logger instance for this agent
     """
     
-    def __init__(self, agent_id: str, model: str = None, reasoning_effort: str = "low", verbosity: str = "low", disable_history: bool = True):
+    def __init__(self, agent_id: str, model: str = None, reasoning_effort: str = "low", verbosity: str = "low"):
         """Initialize the agent
         
         Args:
@@ -31,12 +31,10 @@ class BaseAgent:
             model: LLM model to use (optional, uses default if not specified)
             reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
             verbosity: Response verbosity - "low", "medium", "high" (default: "low")
-            disable_history: If True, disable conversation history (default: True for performance)
         """
         self.agent_id = agent_id
         self.session = NLMSession(namespace=agent_id, model=model, 
-                                 reasoning_effort=reasoning_effort, verbosity=verbosity,
-                                 disable_history=disable_history)
+                                 reasoning_effort=reasoning_effort, verbosity=verbosity)
         self.running = False
         self.logger = logging.getLogger(f"Agent.{agent_id}")
         

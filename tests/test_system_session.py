@@ -166,10 +166,7 @@ def test_inheritance_compatibility():
     assert settings["verbosity"] == "high"
     assert settings["namespace"] == "system_session"
     
-    # Test conversation history methods exist
-    assert hasattr(system, 'reset_context')
-    assert hasattr(system, 'trim_context')
-    assert hasattr(system, 'get_context_info')
+    # Conversation history methods removed for performance and simplicity
     
     # Test original variable methods still work (backward compatibility)
     assert hasattr(system, 'save')

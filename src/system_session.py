@@ -13,8 +13,8 @@ class SystemSession(NLMSession):
     
     Provides cleaner syntax for global variable operations with @-prefixed
     variable names to match natural language macro syntax {{@variable}}.
-    Inherits all NLMSession functionality including macro execution,
-    conversation history, and settings management.
+    Inherits all NLMSession functionality including macro execution
+    and settings management.
     
     Key features:
     - Automatic @ prefix handling for global variables
@@ -40,8 +40,7 @@ class SystemSession(NLMSession):
         
         Args:
             **kwargs: Additional arguments passed to NLMSession
-                     (model, endpoint, api_key, disable_history, 
-                      reasoning_effort, verbosity)
+                     (model, endpoint, api_key, reasoning_effort, verbosity)
         """
         # Force a known namespace for system operations
         super().__init__(namespace="system_session", **kwargs)
