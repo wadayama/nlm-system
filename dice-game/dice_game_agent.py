@@ -19,8 +19,8 @@ class DiceGameAgent(BaseAgent):
       * pass: Skip betting
     """
     
-    def __init__(self, agent_id: str = "dice_player"):
-        super().__init__(agent_id)
+    def __init__(self, agent_id: str = "dice_player", model: str = None):
+        super().__init__(agent_id, model=model)
         
         # Suppress noisy HTTP logs for cleaner game output
         logging.getLogger('httpx').setLevel(logging.WARNING)
@@ -159,10 +159,11 @@ class DiceGameAgent(BaseAgent):
         - Remaining rounds: {{remaining_rounds}}
         
         Game rules:
-        - Even bet: Win on dice 2,4,6 - pays 2x (4x in final round)
-        - Specific number bet: Win on exact number - pays 5x (10x in final round)  
+        - Even bet: Win on dice 2,4,6 - net gain equals your bet (double gain in final round)
+        - Specific number bet: Win on exact number - net gain equals 4x your bet (8x gain in final round)  
         - Pass: Skip betting - no risk, no reward
-        - Final round (round 10) has double payouts
+        - Examples: 5-chip even bet → win 5 chips profit (10 chips profit in final round)
+        - Examples: 5-chip number bet → win 20 chips profit (40 chips profit in final round)
         - Bankruptcy (0 chips) = immediate game over
         
         Remember: The goal is to REACH 30+ chips, not to maximize chips.

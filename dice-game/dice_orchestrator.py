@@ -63,10 +63,9 @@ def create_dice_agents(num_agents, model, reasoning):
     
     for i in range(num_agents):
         agent_id = f"dice_player_{i+1}" if num_agents > 1 else "dice_player"
-        agent = DiceGameAgent(agent_id)
+        agent = DiceGameAgent(agent_id, model=model)
         
-        # Configure model and reasoning
-        agent.session.model = model
+        # Configure reasoning
         agent.session.set_reasoning_effort(reasoning)
         
         agents.append(agent)
@@ -123,7 +122,6 @@ def main():
     print("🎲 Dice Game Orchestrator")
     print("Strategic betting game with natural language AI")
     print(f"Model: {args.model} | Reasoning: {args.reasoning}")
-    print("💡 Tip: Run 'uv run watch_variables.py' in another terminal to monitor game variables")
     print()
     
     # Create agents
