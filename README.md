@@ -68,11 +68,15 @@ The NLM system supports 4 models with automatic provider switching based on mode
 
 ### 🌐 OpenAI Models (Requires API Key)
 - `gpt-5` - Most capable model (Premium tier)
-- `gpt-5-mini` - Balanced performance and cost (Standard tier) 
+- `gpt-5-mini` - Balanced performance and cost (Standard tier, **API default**)
 - `gpt-5-nano` - Fast and economical (Economy tier)
 
-### 💻 Local Model (Default - No API charges)
-- `gpt-oss:20b` - Local LLM via LMStudio
+### 💻 Local Model (No API charges)
+- `gpt-oss:20b` - Local LLM via LMStudio (**CLI default**)
+
+**Default Behavior:**
+- `NLMSession()` → `gpt-5-mini` (API usage, requires key)
+- `uv run nlm_interpreter.py` → `gpt-oss:20b` (CLI usage, no key needed)
 
 ## OpenAI API Setup
 
