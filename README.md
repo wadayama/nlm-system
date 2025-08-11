@@ -202,9 +202,18 @@ from pathlib import Path
 # Create a session
 session = NLMSession(namespace="workflow")
 
-# Read and execute a multi-line macro file
-macro_file = Path("macros/data_pipeline.md")
-macro_content = macro_file.read_text()
+# Create and execute a multi-line macro
+macro_content = """
+Initialize data processing pipeline.
+
+Save 'started' to {{@pipeline_status}}.
+Set {{input_file}} to '/data/raw/dataset.csv'.
+Set {{output_file}} to '/data/processed/clean_data.csv'.
+
+Process the file {{input_file}} and save results to {{output_file}}.
+Update {{@pipeline_status}} to 'completed'.
+Save current timestamp to {{@last_run}}.
+"""
 
 # Execute the entire macro file
 result = session.execute(macro_content)
@@ -215,8 +224,8 @@ print(f"Pipeline status: {session.get('@pipeline_status')}")
 print(f"Output file: {session.get('output_file')}")
 ```
 
-Example macro file (`macros/data_pipeline.md`):
-```markdown
+Example macro content:
+```
 Initialize data processing pipeline.
 
 Save 'started' to {{@pipeline_status}}.
@@ -236,8 +245,8 @@ from pathlib import Path
 
 session = NLMSession(namespace="batch_process")
 
-# Process all macro files in a directory
-macro_dir = Path("macros")
+# Process all macro files in a directory (example with custom directory)
+macro_dir = Path("my_macros")  # User-created directory
 for macro_file in macro_dir.glob("*.md"):
     print(f"\nExecuting: {macro_file.name}")
     
@@ -259,7 +268,7 @@ print(f"Last macro: {session.get('@last_macro')}")
 uv run nlm_interpreter.py "Save 'production' to {{@environment}}"
 
 # Execute from file
-uv run nlm_interpreter.py -f macros/workflow.md
+uv run nlm_interpreter.py -f my_workflow.md
 
 # Custom model/endpoint
 uv run nlm_interpreter.py -m llama3.1:8b -e http://localhost:11434/v1 "Save today to {{@date}}"

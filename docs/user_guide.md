@@ -448,32 +448,26 @@ Save current timestamp to {{@training_start_time}}
 **Project Structure:**
 ```
 project/
-├── macros/
-│   ├── setup/
-│   │   ├── environment.md
-│   │   └── database.md
-│   ├── workflows/
-│   │   ├── data_processing.md
-│   │   ├── model_training.md
-│   │   └── evaluation.md
-│   └── cleanup/
-│       └── reset.md
-└── nlm_interpreter.py
+├── workflow_macros/        # User-created macro directory
+│   ├── setup.md
+│   ├── data_processing.md
+│   ├── model_training.md
+│   ├── evaluation.md
+│   └── cleanup.md
+├── src/                    # NLM system source
+└── README.md
 ```
 
 **Sequential Execution:**
 ```bash
-# Execute setup macros
-uv run nlm_interpreter.py -f macros/setup/environment.md
-uv run nlm_interpreter.py -f macros/setup/database.md
-
-# Run main workflows
-uv run nlm_interpreter.py -f macros/workflows/data_processing.md
-uv run nlm_interpreter.py -f macros/workflows/model_training.md
-uv run nlm_interpreter.py -f macros/workflows/evaluation.md
+# Execute workflow macros
+uv run nlm_interpreter.py -f workflow_macros/setup.md
+uv run nlm_interpreter.py -f workflow_macros/data_processing.md
+uv run nlm_interpreter.py -f workflow_macros/model_training.md
+uv run nlm_interpreter.py -f workflow_macros/evaluation.md
 
 # Cleanup
-uv run nlm_interpreter.py -f macros/cleanup/reset.md
+uv run nlm_interpreter.py -f workflow_macros/cleanup.md
 ```
 
 ### Best Practices

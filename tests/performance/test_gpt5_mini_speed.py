@@ -1,20 +1,20 @@
 #!/usr/bin/env python
-"""Speed measurement for gpt-5-nano only"""
+"""Speed measurement for gpt-5-mini only"""
 
 import time
 from nlm_interpreter import NLMSession
 import statistics
 
 
-def test_gpt5_nano_speed():
-    """Measure gpt-5-nano execution speed"""
+def test_gpt5_mini_speed():
+    """Measure gpt-5-mini execution speed"""
     print("="*60)
-    print("⚡ GPT-5-NANO Speed Measurement")
+    print("⚡ GPT-5-MINI Speed Measurement")
     print("="*60)
     
-    session = NLMSession(model="gpt-5-nano", namespace="speed_test")
+    session = NLMSession(model="gpt-5-mini", namespace="speed_test")
     
-    # Test cases
+    # Test cases (same as nano version for comparison)
     test_cases = [
         ("Simple assignment", "Set {{var1}} to 'Speed Test'"),
         ("Math calculation", "Calculate 42 * 10 and save to {{result}}"),
@@ -71,7 +71,7 @@ def test_gpt5_nano_speed():
 
 if __name__ == "__main__":
     try:
-        test_gpt5_nano_speed()
+        test_gpt5_mini_speed()
     except KeyboardInterrupt:
         print("\n⚠️ Test interrupted")
     except Exception as e:

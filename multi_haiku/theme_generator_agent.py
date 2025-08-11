@@ -4,8 +4,7 @@
 import sys
 from pathlib import Path
 
-# Add parent directory to path for NLM system imports
-
+# Import from src/ structure
 from agent_base import BaseAgent
 
 

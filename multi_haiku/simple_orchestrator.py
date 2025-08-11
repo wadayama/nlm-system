@@ -5,8 +5,7 @@ import sys
 import argparse
 from pathlib import Path
 
-# Add parent directory to path for NLM system imports
-
+# Import from src/ structure
 from system_session import SystemSession
 from multi_agent_system import MultiAgentSystem
 from theme_generator_agent import ThemeGeneratorAgent

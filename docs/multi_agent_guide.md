@@ -419,7 +419,7 @@ print(f"System info: {system.get_system_info()}")
 
 - [NLM基本ガイド](../README.md)
 - [詳細技術文書](detailed_documentation.md)
-- [使用例](../examples/basic_usage.md)
+- [使用例](../README.md#python-api-usage)
 - [エッジケーステスト報告](edge_case_testing_report.md)
 
 ## 📚 サンプルコード集
