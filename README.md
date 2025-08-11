@@ -106,11 +106,11 @@ Get your API key from: https://platform.openai.com/api-keys
 from nlm_interpreter import NLMSession
 
 # Automatic provider selection based on model name
-session_openai = NLMSession(model="gpt-5-mini")  # Uses OpenAI API
-session_local = NLMSession()                     # Uses local LLM (default)
+session_default = NLMSession()                   # Uses gpt-5-mini (default)
+session_local = NLMSession(model="gpt-oss:20b")  # Uses local LLM
 
 # Basic usage - all models support the same API
-session_openai.execute("Save 'Hello OpenAI' to {{message}}")
+session_default.execute("Save 'Hello Default' to {{message}}")
 session_local.execute("Save 'Hello Local' to {{message}}")
 
 # 🆕 Per-Call Model Override - NEW FEATURE!
