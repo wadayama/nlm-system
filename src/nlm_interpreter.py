@@ -668,7 +668,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         
         old_level = self.reasoning_effort
         self.reasoning_effort = level
-        print(f"Reasoning effort changed: {old_level} → {level}")
+        # Setting changes logged for debugging when needed
     
     def set_verbosity(self, level: str):
         """Set verbosity level
@@ -682,7 +682,7 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         
         old_level = self.verbosity
         self.verbosity = level
-        print(f"Verbosity changed: {old_level} → {level}")
+        # Setting changes logged for debugging when needed
     
     def get_settings(self) -> dict:
         """Get current session settings

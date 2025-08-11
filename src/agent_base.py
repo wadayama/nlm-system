@@ -41,7 +41,7 @@ class BaseAgent:
         # Initialize agent state in SQLite
         # Removed automatic metadata logging (agent_id, agent_status, creation_time) to reduce noise
         
-        self.logger.info(f"Agent {agent_id} initialized")
+        # Initialization logging removed for cleaner output
     
     def run(self):
         """Main execution method for the agent

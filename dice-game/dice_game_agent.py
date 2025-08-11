@@ -31,13 +31,13 @@ class DiceGameAgent(BaseAgent):
         self.target_chips = 30
         self.total_rounds = 10
         self.current_round = 0
-        self.logger.info(f"Initialized DiceGameAgent: {agent_id}")
+        # Initialization logging removed for cleaner output
         
     def initialize_game(self):
         """Initialize game variables (clear previous state first)"""
         # Clear all local variables to start fresh
         self.session.clear_local()
-        self.logger.info("Cleared previous game state")
+        # State clearing logged for debugging when needed
         
         # Initialize new game variables
         self.session.save("assets", self.initial_chips)
@@ -45,7 +45,7 @@ class DiceGameAgent(BaseAgent):
         self.session.save("game_status", "initialized")
         self.session.save("target_chips", self.target_chips)
         self.session.save("total_rounds", self.total_rounds)
-        self.logger.info("Game initialized: 20 chips, 10 rounds, target 30+ chips")
+        # Game initialization logged for debugging when needed
         
     def roll_dice(self):
         """Roll a fair 6-sided dice"""
