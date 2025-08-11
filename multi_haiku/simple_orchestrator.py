@@ -96,8 +96,25 @@ def main():
     selector_agent.run()
     print("Best haiku selection completed!")
 
-    # Results will be displayed by external monitoring
-    # Orchestration complete
+    # Display best selection results
+    print("\n" + "="*50)
+    print("🏆 BEST HAIKU SELECTION 🏆")
+    print("="*50)
+
+    best_haiku = system_session.get_global("@best_haiku")
+    best_theme = system_session.get_global("@best_theme")
+    best_number = system_session.get_global("@best_haiku_number")
+    selection_reasoning = system_session.get_global("@selection_reasoning")
+
+    if best_haiku:
+        print(f"Winner: Haiku #{best_number}")
+        print(f"Theme: {best_theme}")
+        print(f"\nSelected Haiku:")
+        print(best_haiku)
+        print(f"\nSelection Reasoning:")
+        print(selection_reasoning)
+    else:
+        print("Best haiku selection failed.")
 
 
 if __name__ == "__main__":
