@@ -18,15 +18,17 @@ class DataCollectorAgent(BaseAgent):
     any task that doesn't require continuous execution.
     """
     
-    def __init__(self, agent_id: str, data_source: str = None, model: str = None):
+    def __init__(self, agent_id: str, data_source: str = None, model: str = None, reasoning_effort: str = "low", verbosity: str = "low"):
         """Initialize data collector agent
         
         Args:
             agent_id: Unique identifier for this agent
             data_source: Description of data source to collect from
             model: LLM model to use (optional)
+            reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
+            verbosity: Response verbosity - "low", "medium", "high" (default: "low")
         """
-        super().__init__(agent_id, model)
+        super().__init__(agent_id, model, reasoning_effort, verbosity)
         self.data_source = data_source or "default source"
         self.session.save("data_source", self.data_source)
     
@@ -59,15 +61,17 @@ class MonitorAgent(BaseAgent):
     alert detection, or any task requiring ongoing observation.
     """
     
-    def __init__(self, agent_id: str, check_interval: float = 5.0, model: str = None):
+    def __init__(self, agent_id: str, check_interval: float = 5.0, model: str = None, reasoning_effort: str = "low", verbosity: str = "low"):
         """Initialize monitor agent
         
         Args:
             agent_id: Unique identifier for this agent
             check_interval: Seconds between monitoring checks
             model: LLM model to use (optional)
+            reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
+            verbosity: Response verbosity - "low", "medium", "high" (default: "low")
         """
-        super().__init__(agent_id, model)
+        super().__init__(agent_id, model, reasoning_effort, verbosity)
         self.check_interval = check_interval
         self.session.save("check_interval", str(check_interval))
         self.check_count = 0
@@ -153,15 +157,17 @@ class ResearchAgent(BaseAgent):
     and the agent maintains state between phases.
     """
     
-    def __init__(self, agent_id: str, research_topic: str = None, model: str = None):
+    def __init__(self, agent_id: str, research_topic: str = None, model: str = None, reasoning_effort: str = "low", verbosity: str = "low"):
         """Initialize research agent
         
         Args:
             agent_id: Unique identifier for this agent
             research_topic: Topic to research
             model: LLM model to use (optional)
+            reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
+            verbosity: Response verbosity - "low", "medium", "high" (default: "low")
         """
-        super().__init__(agent_id, model)
+        super().__init__(agent_id, model, reasoning_effort, verbosity)
         self.research_topic = research_topic or self.session.get("@research_topic") or "general topic"
         self.session.save("research_topic", self.research_topic)
         self.session.save("research_phase", "initialized")
@@ -282,13 +288,16 @@ class ResearchAgent(BaseAgent):
         """Notify other agents that research is complete"""
         report = self.session.get("final_report")
         if report:
-            # Broadcast completion to all agents using new broadcast method
-            self.broadcast(
+            # Broadcast completion via global variables (broadcast method not available)
+            completion_message = (
                 f"🔬 Research completed: '{self.research_topic}' by {self.agent_id}. "
                 f"Report available with {len(report)} characters."
             )
+            self.session.save("@broadcast_message", completion_message)
+            self.session.save("@broadcast_message_from", self.agent_id)
+            self.session.save("@broadcast_message_time", str(time.time()))
             
-            # Still set specific global variables for easy access
+            # Set specific global variables for easy access
             self.session.save("@latest_research_report", report[:500])  # First 500 chars
             self.session.save("@latest_research_topic", self.research_topic)
             self.session.save("@latest_research_agent", self.agent_id)
@@ -302,15 +311,17 @@ class CoordinatorAgent(BaseAgent):
     are met.
     """
     
-    def __init__(self, agent_id: str, team_agents: list = None, model: str = None):
+    def __init__(self, agent_id: str, team_agents: list = None, model: str = None, reasoning_effort: str = "low", verbosity: str = "low"):
         """Initialize coordinator agent
         
         Args:
             agent_id: Unique identifier for this agent
             team_agents: List of agent IDs to coordinate
             model: LLM model to use (optional)
+            reasoning_effort: Reasoning level - "low", "medium", "high" (default: "low")
+            verbosity: Response verbosity - "low", "medium", "high" (default: "low")
         """
-        super().__init__(agent_id, model)
+        super().__init__(agent_id, model, reasoning_effort, verbosity)
         self.team_agents = team_agents or []
         self.session.save("team_size", str(len(self.team_agents)))
         self.session.save("team_agents", ",".join(self.team_agents))
