@@ -710,6 +710,124 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         
         if verbosity is not None:
             self.set_verbosity(verbosity)
+    
+    # Variable append and file I/O functionality
+    def append(self, key: str, value: str, separator: str = "\n"):
+        """Append string to existing variable
+        
+        Args:
+            key: Variable name (use @key for global variables)
+            value: String value to append
+            separator: Separator string (default: newline)
+        """
+        current = self.get(key)
+        if current:
+            new_value = current + separator + value
+        else:
+            new_value = value
+        self.save(key, new_value)
+    
+    def append_with_timestamp(self, key: str, value: str):
+        """Append string to variable with timestamp prefix
+        
+        Args:
+            key: Variable name
+            value: String value to append
+        """
+        from datetime import datetime
+        timestamp = datetime.now().isoformat()
+        self.append(key, f"[{timestamp}] {value}")
+    
+    def get_tail(self, key: str, n_lines: int = 10, separator: str = "\n") -> str:
+        """Get last N lines of a variable (for handling large logs efficiently)
+        
+        Args:
+            key: Variable name
+            n_lines: Number of lines to retrieve
+            separator: Line separator (default: newline)
+            
+        Returns:
+            Last N lines as string
+        """
+        value = self.get(key)
+        if not value:
+            return ""
+        lines = value.split(separator)
+        return separator.join(lines[-n_lines:])
+    
+    def count_lines(self, key: str, separator: str = "\n") -> int:
+        """Count lines/entries in a variable
+        
+        Args:
+            key: Variable name
+            separator: Line separator (default: newline)
+            
+        Returns:
+            Number of lines/entries
+        """
+        value = self.get(key)
+        if not value:
+            return 0
+        return len(value.split(separator))
+    
+    def save_to_file(self, key: str, filename: str, mode: str = 'w') -> bool:
+        """Save variable content to file
+        
+        Args:
+            key: Variable name
+            filename: Target file path
+            mode: File mode ('w' for overwrite, 'a' for append)
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        value = self.get(key)
+        if value is None:
+            return False
+        
+        try:
+            import os
+            # Create directory if it doesn't exist
+            dir_path = os.path.dirname(filename)
+            if dir_path:
+                os.makedirs(dir_path, exist_ok=True)
+            
+            with open(filename, mode, encoding='utf-8') as f:
+                f.write(value)
+            return True
+        except Exception as e:
+            # Log error but don't raise exception
+            import logging
+            logging.getLogger(__name__).error(f"Failed to save to file {filename}: {e}")
+            return False
+    
+    def load_from_file(self, key: str, filename: str, append: bool = False) -> bool:
+        """Load content from file to variable
+        
+        Args:
+            key: Variable name
+            filename: Source file path
+            append: If True, append to existing variable; if False, overwrite
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            if append:
+                self.append(key, content)
+            else:
+                self.save(key, content)
+            return True
+        except FileNotFoundError:
+            return False
+        except Exception as e:
+            # Log error but don't raise exception
+            import logging
+            logging.getLogger(__name__).error(f"Failed to load from file {filename}: {e}")
+            return False
 
 
 def nlm_execute(macro_content, namespace=None, model=None, endpoint=None):

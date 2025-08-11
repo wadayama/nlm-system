@@ -59,6 +59,34 @@ session.execute("Set {{@global_var}} to 'shared_value'")
 value = session.get("other_session.their_variable")
 ```
 
+### 1.5. Advanced Variable Management (Long-term Memory)
+```python
+# Append to variables (experience accumulation)
+session.append("experience_log", "Decision A → Success")
+session.append_with_timestamp("audit_trail", "Action performed")
+
+# Efficient access to recent entries
+recent_experiences = session.get_tail("experience_log", n_lines=10)
+total_experiences = session.count_lines("experience_log")
+
+# Persistence (survive restarts)
+session.save_to_file("learned_patterns", "data/agent_memory.txt")
+session.load_from_file("learned_patterns", "data/agent_memory.txt")
+
+# Agent long-term memory pattern
+class PersistentAgent(BaseAgent):
+    def __init__(self, agent_id, **kwargs):
+        super().__init__(agent_id, **kwargs)
+        # Restore previous memories on startup
+        self.session.load_from_file("memory", f"data/{agent_id}_memory.txt")
+    
+    def learn(self, experience):
+        self.session.append_with_timestamp("memory", experience)
+        # Periodic persistence
+        if self.session.count_lines("memory") % 50 == 0:
+            self.session.save_to_file("memory", f"data/{self.agent_id}_memory.txt")
+```
+
 ### 2. Agent Development Pattern
 ```python
 class MyAgent(BaseAgent):
@@ -125,6 +153,38 @@ uv run tests/test_logical_reasoning.py --compare
 4. Add command-line arguments (`-m`, `-r`, `--compare`)
 5. Test with: `uv run tests/test_new_capability.py`
 
+### Implementing Agent Long-term Memory
+1. **Design Memory Structure**: Decide what experiences to track
+   ```python
+   # Examples: decisions, outcomes, learned patterns, failures
+   session.append_with_timestamp("decisions", f"Action: {action}, Result: {result}")
+   ```
+
+2. **Implement Persistence**: Save/load critical memories
+   ```python
+   # On shutdown or periodically
+   session.save_to_file("long_term_memory", f"data/{agent_id}_memory.txt")
+   
+   # On startup
+   session.load_from_file("long_term_memory", f"data/{agent_id}_memory.txt")
+   ```
+
+3. **Efficient Memory Access**: Use `get_tail()` for recent experiences
+   ```python
+   # Get last 20 decisions for context-aware reasoning
+   recent_context = session.get_tail("decisions", n_lines=20)
+   ```
+
+4. **Memory Management**: Prevent unbounded growth
+   ```python
+   # Archive old memories when count gets large
+   if session.count_lines("memory") > 1000:
+       session.save_to_file("memory", f"archives/{agent_id}_{date}.txt", mode='w')
+       # Keep only recent 200 entries
+       recent = session.get_tail("memory", n_lines=200)
+       session.save("memory", recent)
+   ```
+
 ### Modifying Core NLM System
 1. **READ FIRST**: Understand `src/nlm_interpreter.py` variable resolution
 2. **Test Impact**: Run existing tests to ensure no regression
@@ -153,10 +213,18 @@ print(session.get("debug_var"))  # Should print: test
 3. NLMSession executes appropriate SQLite operations
 4. Results flow back to LLM for final response
 
+### Long-term Memory Architecture
+- **In-Memory**: Variables stored in SQLite during execution
+- **Append Operations**: Efficient string concatenation for logs/experiences
+- **File Persistence**: Variables can survive system restarts
+- **Selective Loading**: `get_tail()` prevents memory bloat with large histories
+- **Automatic Timestamps**: Built-in audit trails for agent decisions
+
 ### Agent Communication Patterns
 - **Direct**: Via shared namespace variables
 - **Global Broadcast**: Using `@variable_name` syntax
 - **Message Passing**: Coordinator-mediated via global variables
+- **Persistent Memory**: File-based long-term knowledge retention
 
 ### Testing Philosophy
 - **Capability-Focused**: Test LLM reasoning abilities, not system mechanics
@@ -191,10 +259,11 @@ rm test_*.py
 
 1. ✅ Read this CLAUDE.md file
 2. ✅ Understand variable syntax: `{{local}}`, `{{@global}}`, `{{namespace.var}}`
-3. ✅ Check `git status` to see current work
-4. ✅ Run a simple test: `uv run tests/test_conditional_logic.py`
-5. ✅ Examine current test results and identify areas for improvement
-6. ✅ Use incremental development with safety rollbacks
+3. ✅ Understand long-term memory: `append()`, `get_tail()`, `save_to_file()`, `load_from_file()`
+4. ✅ Check `git status` to see current work
+5. ✅ Run a simple test: `uv run tests/test_conditional_logic.py`
+6. ✅ Examine current test results and identify areas for improvement
+7. ✅ Use incremental development with safety rollbacks
 
 **Remember**: This system enables natural language programming. The `{{variable}}` syntax is the core innovation that makes complex LLM coordination possible.
 

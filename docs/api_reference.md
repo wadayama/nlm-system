@@ -204,6 +204,134 @@ Set the verbosity level for LLM responses (OpenAI models only).
 session.set_verbosity("low")  # More concise responses
 ```
 
+• • •
+
+#### Long-term Memory Methods
+
+##### append(key, value, separator="\\n")
+
+Append string to existing variable for experience accumulation.
+
+**Parameters:**
+- `key` (str): Variable name (use `@key` for global variables)
+- `value` (str): String value to append
+- `separator` (str): Separator between entries (default: newline)
+
+**Examples:**
+```python
+# Build experience log
+session.append("decisions", "Choice A → Success")
+session.append("decisions", "Choice B → Failure")
+
+# Use custom separator
+session.append("tags", "python", separator=", ")
+session.append("tags", "ai", separator=", ")  # Result: "python, ai"
+```
+
+• • •
+
+##### append_with_timestamp(key, value)
+
+Append string to variable with automatic timestamp prefix.
+
+**Parameters:**
+- `key` (str): Variable name
+- `value` (str): String value to append
+
+**Examples:**
+```python
+session.append_with_timestamp("audit", "User logged in")
+session.append_with_timestamp("audit", "Data updated")
+# Creates: "[2024-01-11T10:30:45] User logged in\\n[2024-01-11T10:31:12] Data updated"
+```
+
+• • •
+
+##### get_tail(key, n_lines=10, separator="\\n")
+
+Get last N lines of a variable efficiently (prevents memory bloat).
+
+**Parameters:**
+- `key` (str): Variable name
+- `n_lines` (int): Number of recent lines to retrieve (default: 10)
+- `separator` (str): Line separator (default: newline)
+
+**Returns:** str - Last N lines as string
+
+**Examples:**
+```python
+# Get recent experiences for decision-making
+recent_log = session.get_tail("experience_log", n_lines=5)
+
+# Get recent tags
+recent_tags = session.get_tail("tag_list", n_lines=3, separator=", ")
+```
+
+• • •
+
+##### count_lines(key, separator="\\n")
+
+Count lines/entries in a variable.
+
+**Parameters:**
+- `key` (str): Variable name
+- `separator` (str): Line separator (default: newline)
+
+**Returns:** int - Number of lines/entries
+
+**Examples:**
+```python
+# Check experience count
+total_decisions = session.count_lines("decisions")
+
+# Count comma-separated items
+tag_count = session.count_lines("tags", separator=", ")
+```
+
+• • •
+
+##### save_to_file(key, filename, mode='w')
+
+Save variable content to file for persistence.
+
+**Parameters:**
+- `key` (str): Variable name
+- `filename` (str): Target file path
+- `mode` (str): File mode - 'w' (overwrite) or 'a' (append)
+
+**Returns:** bool - True if successful
+
+**Examples:**
+```python
+# Save agent memory to file
+success = session.save_to_file("long_term_memory", "data/agent_memory.txt")
+
+# Append to log file
+session.save_to_file("daily_log", "logs/today.log", mode='a')
+```
+
+• • •
+
+##### load_from_file(key, filename, append=False)
+
+Load content from file to variable.
+
+**Parameters:**
+- `key` (str): Variable name
+- `filename` (str): Source file path
+- `append` (bool): If True, append to existing variable; if False, overwrite
+
+**Returns:** bool - True if successful
+
+**Examples:**
+```python
+# Restore agent memory on startup
+success = session.load_from_file("memory", "data/agent_memory.txt")
+
+# Append external data to existing variable
+session.load_from_file("knowledge", "external_data.txt", append=True)
+```
+
 ---
 
 ### 🌐 SystemSession

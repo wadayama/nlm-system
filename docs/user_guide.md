@@ -321,6 +321,51 @@ session.execute("Store the API key 'secret123' in {{@api_credentials}}")
 print(session.get("@api_credentials"))  # "secret123"
 ```
 
+### Long-term Memory and Experience Accumulation
+
+The NLM system supports advanced memory management for agents that need to learn and accumulate experiences over time:
+
+```python
+from nlm_interpreter import NLMSession
+
+session = NLMSession("learning_agent")
+
+# Build experience logs with append operations
+session.append("experience_log", "Decision: Choose option A → Result: Success")
+session.append("experience_log", "Decision: Choose option B → Result: Failure") 
+session.append("experience_log", "Decision: Choose option A → Result: Success")
+
+# Add timestamped entries for audit trails
+session.append_with_timestamp("audit_trail", "System started")
+session.append_with_timestamp("audit_trail", "User authentication succeeded")
+session.append_with_timestamp("audit_trail", "Data processing completed")
+
+# Check experience accumulation
+total_experiences = session.count_lines("experience_log")
+print(f"Total experiences: {total_experiences}")  # 3
+
+# Get recent experiences for decision-making (prevents memory bloat)
+recent_decisions = session.get_tail("experience_log", n_lines=2)
+print("Recent decisions:", recent_decisions)
+# Output: "Decision: Choose option B → Result: Failure\nDecision: Choose option A → Result: Success"
+
+# Persistence: Save memories to survive restarts
+success = session.save_to_file("experience_log", "data/agent_memory.txt")
+success = session.save_to_file("audit_trail", "logs/audit.log")
+
+# Later: Restore memories on agent startup
+session.load_from_file("experience_log", "data/agent_memory.txt")
+
+# Continue learning - append to restored memories
+session.append("experience_log", "Decision: Choose option C → Result: Partial success")
+
+# Memory management - archive old memories when they get too large
+if session.count_lines("experience_log") > 1000:
+    session.save_to_file("experience_log", f"archives/memory_{date.today()}.txt")
+    recent_memory = session.get_tail("experience_log", n_lines=200)
+    session.save("experience_log", recent_memory)  # Keep only recent 200 entries
+```
+
 ### Advanced Natural Language Processing
 
 ```python
