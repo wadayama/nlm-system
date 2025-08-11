@@ -348,7 +348,7 @@ class CustomTaskAgent(BaseAgent):
         # Execute natural language task
         result = self.execute_macro(
             f"Perform this task: {self.task_description}. "
-            f"Save the result to {{{{task_result}}}}"
+            f"Save the result to {{task_result}}"
         )
         
         self.set_status("completed")

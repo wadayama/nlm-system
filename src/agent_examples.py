@@ -40,7 +40,7 @@ class DataCollectorAgent(BaseAgent):
         # Simulate data collection with a macro
         result = self.execute_macro(
             f"Collect data from {self.data_source} and summarize key findings. "
-            f"Save the summary to {{{{collected_data}}}}"
+            f"Save the summary to {{collected_data}}"
         )
         
         # Store metadata about the collection
@@ -211,7 +211,7 @@ class ResearchAgent(BaseAgent):
         result = self.execute_macro(
             f"Review existing literature on '{self.research_topic}'. "
             f"Identify key concepts, theories, and gaps in knowledge. "
-            f"Save findings to {{{{literature_findings}}}}"
+            f"Save findings to {{literature_findings}}"
         )
         
         findings = self.session.get("literature_findings")
@@ -225,16 +225,16 @@ class ResearchAgent(BaseAgent):
     def phase_data_collection(self):
         """Phase 2: Collect relevant data"""
         result = self.execute_macro(
-            f"Based on literature findings {{{{literature_findings}}}}, "
+            f"Based on literature findings {{literature_findings}}, "
             f"identify what data needs to be collected for '{self.research_topic}'. "
-            f"Create a data collection plan and save to {{{{data_plan}}}}"
+            f"Create a data collection plan and save to {{data_plan}}"
         )
         
         # Simulate data collection
         result = self.execute_macro(
-            f"Following the data plan {{{{data_plan}}}}, "
+            f"Following the data plan {{data_plan}}, "
             f"collect relevant data and statistics. "
-            f"Save collected data to {{{{research_data}}}}"
+            f"Save collected data to {{research_data}}"
         )
         
         self.session.save("phase_2_complete", "true")
@@ -243,9 +243,9 @@ class ResearchAgent(BaseAgent):
     def phase_analysis(self):
         """Phase 3: Analyze collected data"""
         result = self.execute_macro(
-            f"Analyze the research data {{{{research_data}}}} for '{self.research_topic}'. "
+            f"Analyze the research data {{research_data}} for '{self.research_topic}'. "
             f"Identify patterns, trends, and significant findings. "
-            f"Save analysis results to {{{{analysis_results}}}}"
+            f"Save analysis results to {{analysis_results}}"
         )
         
         self.session.save("phase_3_complete", "true")
@@ -254,10 +254,10 @@ class ResearchAgent(BaseAgent):
     def phase_synthesis(self):
         """Phase 4: Synthesize findings"""
         result = self.execute_macro(
-            f"Synthesize all findings from literature {{{{literature_findings}}}}, "
-            f"data {{{{research_data}}}}, and analysis {{{{analysis_results}}}}. "
+            f"Synthesize all findings from literature {{literature_findings}}, "
+            f"data {{research_data}}, and analysis {{analysis_results}}. "
             f"Create comprehensive conclusions about '{self.research_topic}'. "
-            f"Save synthesis to {{{{research_synthesis}}}}"
+            f"Save synthesis to {{research_synthesis}}"
         )
         
         self.session.save("phase_4_complete", "true")
@@ -268,11 +268,11 @@ class ResearchAgent(BaseAgent):
         result = self.execute_macro(
             f"Create a final research report on '{self.research_topic}' that includes: "
             f"1. Executive summary "
-            f"2. Literature review from {{{{literature_findings}}}} "
-            f"3. Methodology and data from {{{{data_plan}}}} "
-            f"4. Analysis from {{{{analysis_results}}}} "
-            f"5. Conclusions from {{{{research_synthesis}}}} "
-            f"Save the complete report to {{{{final_report}}}}"
+            f"2. Literature review from {{literature_findings}} "
+            f"3. Methodology and data from {{data_plan}} "
+            f"4. Analysis from {{analysis_results}} "
+            f"5. Conclusions from {{research_synthesis}} "
+            f"Save the complete report to {{final_report}}"
         )
         
         # Notify completion
@@ -463,7 +463,7 @@ class CoordinatorAgent(BaseAgent):
         # Try to provide assistance or reassign task
         result = self.execute_macro(
             f"Agent {sender} needs help with: {message}. "
-            f"Provide guidance or solution. Save response to {{{{help_response}}}}"
+            f"Provide guidance or solution. Save response to {{help_response}}"
         )
         
         help_response = self.session.get("help_response")

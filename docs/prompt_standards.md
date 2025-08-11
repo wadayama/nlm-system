@@ -83,7 +83,7 @@ Save the themes as global variables:
 haiku_prompt = f"""
 # Haiku Generation Task
 
-Create a beautiful haiku poem based on the theme in {{{{@theme_{self.theme_number}}}}}.
+Create a beautiful haiku poem based on the theme in {{@theme_{self.theme_number}}}.
 
 ## Traditional Haiku Principles
 - 5-7-5 syllable structure
@@ -94,7 +94,7 @@ Create a beautiful haiku poem based on the theme in {{{{@theme_{self.theme_numbe
 Create an authentic haiku that captures the essence and mood of the theme.
 
 ## Output
-Save the completed haiku to {{{{@haiku_{self.theme_number}}}}}
+Save the completed haiku to {{@haiku_{self.theme_number}}}
 """.strip()
 ```
 
@@ -131,7 +131,7 @@ NLM変数展開は通常通り機能します：
 # プロンプト内での変数展開
 {{variable_name}}           # ローカル変数
 {{@global_variable}}        # グローバル変数
-{{{{nested_expansion}}}}    # ネスト展開
+{{variable_name}}           # 通常は二重括弧で十分
 ```
 
 ### グローバル変数の標準書法
