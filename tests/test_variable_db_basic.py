@@ -61,9 +61,11 @@ def test_basic_operations():
         return False
         
     finally:
-        # Cleanup
-        if os.path.exists("test_variables.db"):
-            os.remove("test_variables.db")
+        # Cleanup all related files
+        for suffix in ['', '-shm', '-wal', '-journal']:
+            file_path = f"test_variables.db{suffix}"
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
 if __name__ == "__main__":
     success = test_basic_operations()

@@ -146,9 +146,11 @@ def test_tool_functions():
         return False
         
     finally:
-        # Cleanup
-        if os.path.exists(test_db):
-            os.remove(test_db)
+        # Cleanup all related files
+        for suffix in ['', '-shm', '-wal', '-journal']:
+            file_path = f"{test_db}{suffix}"
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
 
 def test_nlm_execute_function():
@@ -184,9 +186,12 @@ def test_nlm_execute_function():
         return False
         
     finally:
-        # Cleanup
-        if test_db and os.path.exists(test_db):
-            os.remove(test_db)
+        # Cleanup all related files
+        if test_db:
+            for suffix in ['', '-shm', '-wal', '-journal']:
+                file_path = f"{test_db}{suffix}"
+                if os.path.exists(file_path):
+                    os.remove(file_path)
 
 
 def run_all_tests():

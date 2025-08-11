@@ -39,16 +39,21 @@ def test_handle_list_sessions():
         
         print("✓ Sessions listed correctly")
         
-        # Clean up
-        if os.path.exists("test_sessions.db"):
-            os.remove("test_sessions.db")
+        # Clean up all related files
+        for suffix in ['', '-shm', '-wal', '-journal']:
+            file_path = f"test_sessions.db{suffix}"
+            if os.path.exists(file_path):
+                os.remove(file_path)
         
         return True
         
     except Exception as e:
         print(f"❌ _handle_list_sessions test failed: {e}")
-        if os.path.exists("test_sessions.db"):
-            os.remove("test_sessions.db")
+        # Clean up all related files on error too
+        for suffix in ['', '-shm', '-wal', '-journal']:
+            file_path = f"test_sessions.db{suffix}"
+            if os.path.exists(file_path):
+                os.remove(file_path)
         return False
 
 
