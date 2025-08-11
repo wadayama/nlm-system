@@ -4,11 +4,14 @@ A Python orchestrator for natural language macros with unified variable syntax, 
 
 ## Prerequisites
 
-**⚠️ Important: This project requires [uv](https://github.com/astral-sh/uv) for execution**
+**⚠️ Important: This project requires [uv](https://github.com/astral-sh/uv) for package management and execution**
 
 ```bash
 # Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install project dependencies
+uv sync                 # ✅ Installs all dependencies from pyproject.toml
 
 # All Python scripts must be run with uv:
 uv run script.py        # ✅ Correct
@@ -17,8 +20,16 @@ python script.py        # ❌ Won't work with src/ structure
 
 **Why uv is required:**
 - Project uses `src/` layout with automatic package discovery
-- uv handles Python path configuration from `pyproject.toml`  
+- uv handles Python path configuration from `pyproject.toml`
+- uv manages dependencies more efficiently than pip
 - Standard `python` command cannot find modules in `src/` directory
+
+**Adding dependencies:**
+```bash
+# Add a new dependency to the project
+uv add package_name        # ✅ Correct way to add dependencies
+pip install package_name   # ❌ Won't persist in project configuration
+```
 
 ## Features
 
@@ -425,7 +436,8 @@ Default settings (no configuration needed):
 ## Requirements
 
 - Python 3.7+
-- OpenAI library (`pip install openai`)
+- [uv](https://github.com/astral-sh/uv) package manager (required)
+- Dependencies managed via `uv sync` (includes OpenAI library)
 - Ollama/LMStudio/OpenAI API endpoint
 - SQLite (included with Python)
 
