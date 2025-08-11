@@ -421,16 +421,101 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         except Exception as e:
             return f"Error executing tool {function_name}: {str(e)}"
 
-    def execute(self, macro_content):
+    def _save_current_state(self):
+        """Save current session state for temporary override scenarios
+        
+        Returns:
+            dict: Complete current state including model, endpoint, client, etc.
+        """
+        return {
+            'model': self.model,
+            'endpoint': self.endpoint,
+            'api_key': self.api_key,
+            'client': self.client,
+            'reasoning_effort': self.reasoning_effort,
+            'verbosity': self.verbosity
+        }
+    
+    def _restore_state(self, saved_state):
+        """Restore session state from saved state
+        
+        Args:
+            saved_state: State dict from _save_current_state()
+        """
+        self.model = saved_state['model']
+        self.endpoint = saved_state['endpoint']
+        self.api_key = saved_state['api_key']
+        self.client = saved_state['client']
+        self.reasoning_effort = saved_state['reasoning_effort']
+        self.verbosity = saved_state['verbosity']
+    
+    def _apply_temporary_model(self, temp_model):
+        """Apply temporary model and update related configuration
+        
+        Args:
+            temp_model: Model name to switch to temporarily
+            
+        Raises:
+            ValueError: If model name is invalid or API key cannot be loaded
+        """
+        if not isinstance(temp_model, str) or not temp_model.strip():
+            raise ValueError("Model name must be a non-empty string")
+        
+        self.model = temp_model
+        
+        # OpenAI models (gpt-5 series)
+        openai_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
+        
+        try:
+            if temp_model in openai_models:
+                # Switch to OpenAI configuration
+                self.endpoint = "https://api.openai.com/v1"
+                self.api_key = self._load_openai_key()
+            else:
+                # Switch to Local LLM configuration  
+                self.endpoint = "http://localhost:1234/v1"
+                self.api_key = "ollama"
+            
+            # Create new client with updated configuration
+            self.client = OpenAI(
+                base_url=self.endpoint,
+                api_key=self.api_key
+            )
+        except Exception as e:
+            # Re-raise with more context
+            raise ValueError(f"Failed to configure model '{temp_model}': {str(e)}")
+
+    def execute(self, macro_content, model=None, reasoning_effort=None, verbosity=None):
         """Execute natural language macro content with multi-turn tool support
         
         Args:
             macro_content: String containing macro instructions
+            model: Optional model override for this execution only
+            reasoning_effort: Optional reasoning effort override ("low", "medium", "high")
+            verbosity: Optional verbosity override ("low", "medium", "high")
             
         Returns:
             String result from macro execution
         """
+        # Save current state for restoration after execution
+        original_state = None
+        if model or reasoning_effort or verbosity:
+            original_state = self._save_current_state()
+        
         try:
+            # Apply temporary overrides if provided
+            if model and model != self.model:
+                self._apply_temporary_model(model)
+            if reasoning_effort:
+                valid_reasoning_levels = ["low", "medium", "high"]
+                if reasoning_effort not in valid_reasoning_levels:
+                    raise ValueError(f"Invalid reasoning effort: {reasoning_effort}. Must be one of {valid_reasoning_levels}")
+                self.reasoning_effort = reasoning_effort  
+            if verbosity:
+                valid_verbosity_levels = ["low", "medium", "high"]
+                if verbosity not in valid_verbosity_levels:
+                    raise ValueError(f"Invalid verbosity: {verbosity}. Must be one of {valid_verbosity_levels}")
+                self.verbosity = verbosity
             # Build messages (history feature removed)
             messages = [
                 {"role": "system", "content": self.system_prompt},
@@ -496,6 +581,10 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
             return f"Error parsing tool arguments: {str(e)}"
         except Exception as e:
             return f"Error executing macro: {str(e)}"
+        finally:
+            # Restore original state if temporary overrides were applied
+            if original_state is not None:
+                self._restore_state(original_state)
     
     # User-friendly variable API
     def save(self, key, value):

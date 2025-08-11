@@ -58,17 +58,32 @@ class BaseAgent:
             f"{self.__class__.__name__} must implement run() method"
         )
     
-    def execute_macro(self, macro_content: str) -> str:
-        """Execute a natural language macro
+    def execute_macro(self, macro_content: str, model: str = None, 
+                      reasoning_effort: str = None, verbosity: str = None) -> str:
+        """Execute a natural language macro with optional parameter overrides
         
         Args:
             macro_content: The macro content to execute
+            model: Optional model override for this execution only
+            reasoning_effort: Optional reasoning effort override ("low", "medium", "high")
+            verbosity: Optional verbosity override ("low", "medium", "high")
             
         Returns:
             The result of macro execution
         """
-        self.logger.debug(f"Executing macro: {macro_content[:50]}...")
-        result = self.session.execute(macro_content)
+        override_info = []
+        if model: override_info.append(f"model={model}")
+        if reasoning_effort: override_info.append(f"reasoning={reasoning_effort}")
+        if verbosity: override_info.append(f"verbosity={verbosity}")
+        
+        debug_msg = f"Executing macro: {macro_content[:50]}..."
+        if override_info:
+            debug_msg += f" [overrides: {', '.join(override_info)}]"
+        self.logger.debug(debug_msg)
+        
+        result = self.session.execute(macro_content, model=model, 
+                                    reasoning_effort=reasoning_effort, 
+                                    verbosity=verbosity)
         # Removed automatic last_macro_time logging to reduce noise
         return result
     
