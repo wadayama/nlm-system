@@ -48,7 +48,7 @@ session = NLMSession(namespace="data_processing", model="gpt-5-mini")
 
 ##### save(key, value)
 
-Save a variable to the session or globally.
+Save a variable to the session or globally with unified syntax support.
 
 **Parameters:**
 - `key` (str): Variable name. Use `@` prefix for global variables.
@@ -61,15 +61,18 @@ Save a variable to the session or globally.
 # Save local variable (session-scoped)
 session.save("task_status", "processing")
 
-# Save global variable (shared across all sessions)
+# Save global variable - unified syntax
 session.save("@project_config", "production")
+
+# Equivalent to:
+session.save_global("project_config", "production")
 ```
 
 • • •
 
 ##### get(key)
 
-Retrieve a variable value.
+Retrieve a variable value with unified syntax support.
 
 **Parameters:**
 - `key` (str): Variable name. Use `@` prefix for global variables.
@@ -81,13 +84,16 @@ Retrieve a variable value.
 # Get local variable
 status = session.get("task_status")  # Returns "processing"
 
-# Get global variable
+# Get global variable - unified syntax
 config = session.get("@project_config")  # Returns "production"
+
+# Equivalent to:
+config = session.get_global("project_config")  # Returns "production"
 ```
 
 ##### delete(key)
 
-Delete a variable.
+Delete a variable with unified syntax support.
 
 **Parameters:**
 - `key` (str): Variable name. Use `@` prefix for global variables.
@@ -99,8 +105,11 @@ Delete a variable.
 # Delete local variable
 session.delete("task_status")
 
-# Delete global variable  
+# Delete global variable - unified syntax
 session.delete("@project_config")
+
+# Equivalent to:
+session.delete_global("project_config")
 ```
 
 • • •
@@ -210,7 +219,7 @@ session.set_verbosity("low")  # More concise responses
 
 ##### append(key, value, separator="\\n")
 
-Append string to existing variable for experience accumulation.
+Append string to existing variable for experience accumulation with unified syntax support.
 
 **Parameters:**
 - `key` (str): Variable name (use `@key` for global variables)
@@ -219,9 +228,12 @@ Append string to existing variable for experience accumulation.
 
 **Examples:**
 ```python
-# Build experience log
+# Build experience log (local)
 session.append("decisions", "Choice A → Success")
 session.append("decisions", "Choice B → Failure")
+
+# Build global experience log - unified syntax
+session.append("@global_decisions", "System event occurred")
 
 # Use custom separator
 session.append("tags", "python", separator=", ")

@@ -60,7 +60,7 @@ def main():
     # Show generated themes
     print("\n📝 Generated Themes:")
     for i in range(1, 5):
-        theme = system_session.get_global(f"@theme_{i}")
+        theme = system_session.get(f"@theme_{i}")
         print(f"  Theme {i}: {theme}")
 
     # Step 2: Create and run 4 haiku generator agents in parallel
@@ -79,8 +79,8 @@ def main():
     # Show generated haiku progress
     print("\n🎋 Generated Haiku:")
     for i in range(1, 5):
-        haiku = system_session.get_global(f"@haiku_{i}")
-        theme = system_session.get_global(f"@theme_{i}")
+        haiku = system_session.get(f"@haiku_{i}")
+        theme = system_session.get(f"@theme_{i}")
         if haiku:
             print(f"  ✅ Haiku {i} ({theme}):")
             # Indent each line of the haiku
@@ -101,10 +101,10 @@ def main():
     print("🏆 BEST HAIKU SELECTION 🏆")
     print("="*50)
 
-    best_haiku = system_session.get_global("@best_haiku")
-    best_theme = system_session.get_global("@best_theme")
-    best_number = system_session.get_global("@best_haiku_number")
-    selection_reasoning = system_session.get_global("@selection_reasoning")
+    best_haiku = system_session.get("@best_haiku")
+    best_theme = system_session.get("@best_theme")
+    best_number = system_session.get("@best_haiku_number")
+    selection_reasoning = system_session.get("@selection_reasoning")
 
     if best_haiku:
         print(f"Winner: Haiku #{best_number}")
