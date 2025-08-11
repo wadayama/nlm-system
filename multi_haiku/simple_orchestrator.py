@@ -56,6 +56,12 @@ def main():
     theme_agent = ThemeGeneratorAgent("theme_gen", model=model, reasoning_effort=args.reasoning)
     theme_agent.run()
     print("Theme generation completed!")
+    
+    # Show generated themes
+    print("\n📝 Generated Themes:")
+    for i in range(1, 5):
+        theme = system_session.get_global(f"@theme_{i}")
+        print(f"  Theme {i}: {theme}")
 
     # Step 2: Create and run 4 haiku generator agents in parallel
     multi_agent_system = MultiAgentSystem("haiku_generation", model=model)
@@ -69,6 +75,16 @@ def main():
     print("Starting parallel haiku generation...")
     results = multi_agent_system.run_parallel(max_concurrent=4)
     print(f"Haiku generation completed: {results['successful']} successful, {results['failed']} failed")
+    
+    # Show generated haiku progress
+    print("\n🎋 Haiku Generation Status:")
+    for i in range(1, 5):
+        haiku = system_session.get_global(f"@haiku_{i}")
+        theme = system_session.get_global(f"@theme_{i}")
+        if haiku:
+            print(f"  ✅ Haiku {i} ({theme}): Generated")
+        else:
+            print(f"  ❌ Haiku {i} ({theme}): Failed")
 
     # Step 3: Select best haiku
     print("\nSelecting best haiku...")
