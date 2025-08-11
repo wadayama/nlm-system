@@ -49,229 +49,6 @@ uv sync
 uv run python -c "from nlm_interpreter import NLMSession; print('NLM System ready!')"
 ```
 
-## Python API Usage
-
-```python
-from nlm_interpreter import NLMSession
-
-# Create a session with isolated namespace
-session = NLMSession(namespace="my_agent")
-
-# Save local variables (session-scoped)
-session.save("task", "data_processing")
-session.save("status", "running")
-
-# Save global variables (shared across all sessions)
-session.save("@project_name", "AI Research 2024")
-session.save("@environment", "production")
-
-# Retrieve variables
-print(session.get("task"))           # "data_processing" 
-print(session.get("@project_name"))  # "AI Research 2024"
-
-# Execute natural language macros
-session.execute("Save 'Hello World' to {{greeting}}")
-print(session.get("greeting"))       # "Hello World"
-
-session.execute("Save current timestamp to {{@last_updated}}")
-print(session.get("@last_updated"))  # Timestamp value
-
-# List variables
-print(session.list_local())   # {"task": "data_processing", "status": "running", ...}
-print(session.list_global())  # {"project_name": "AI Research 2024", ...}
-
-# Delete variables
-session.delete("task")         # Delete local variable
-session.delete("@environment") # Delete global variable
-
-# Clear all local variables
-session.clear_local()
-```
-
-## Multi-Session Communication
-
-```python
-# Session 1: Data preparation
-data_session = NLMSession(namespace="data_prep")
-data_session.save("dataset", "/data/train.csv")
-data_session.save("@pipeline_status", "data_ready")  # Global
-
-# Session 2: Model training  
-model_session = NLMSession(namespace="training")
-status = model_session.get("@pipeline_status")      # "data_ready"
-model_session.save("@model_status", "training")      # Global
-
-# Both sessions see global updates
-print(data_session.get("@model_status"))   # "training"
-print(model_session.get("@model_status"))  # "training"
-```
-
-## SystemSession - Unified Global Variable Access
-
-For cleaner global variable management with unified @-prefixed syntax:
-
-```python
-from system_session import SystemSession
-
-# Create system session with unified @-syntax
-system = SystemSession()
-
-# Set global variables - both ways work the same
-system.set_global("status", "active")        # Auto @-prefix
-system.set_global("@config", "production")   # Explicit @-prefix
-
-# Get global variables - consistent interface
-status = system.get_global("status")         # Returns "active"  
-config = system.get_global("@config")        # Returns "production"
-
-# Natural language macros use same @-syntax
-system.execute("Save 'ready' to {{@system_status}}")
-system_status = system.get_global("system_status")  # Returns "ready"
-
-# List all global variables (clean keys without @)
-globals_dict = system.list_globals()
-# Returns: {"status": "active", "config": "production", "system_status": "ready"}
-
-# Context manager support
-with SystemSession() as system:
-    system.set_global("temp_config", "test_mode")
-    system.execute("Process configuration from {{@temp_config}}")
-    
-# Inherits all NLMSession functionality
-system.set_reasoning_effort("high")
-system.set_verbosity("medium")
-system.reset_context()  # Clear conversation history
-```
-
-**Key Benefits:**
-- **Interface Consistency**: `{{@variable}}` in macros matches `system.get_global("@variable")` in Python
-- **Auto @ Handling**: `set_global("var")` automatically becomes `@var` internally
-- **Full Inheritance**: All NLMSession features (execute, settings, context) work unchanged
-- **Backward Compatible**: Existing code continues to work without changes
-
-## Multi-Agent System
-
-Execute multiple agents in parallel for complex workflows:
-
-```python
-from multi_agent_system import MultiAgentSystem
-from agent_base import BaseAgent
-from agent_examples import DataCollectorAgent, ResearchAgent, MonitorAgent
-
-# Create custom agent by inheriting from BaseAgent
-class CustomTaskAgent(BaseAgent):
-    def __init__(self, agent_id: str, task_description: str):
-        super().__init__(agent_id)
-        self.task_description = task_description
-        
-    def run(self):
-        """Define your agent's behavior here"""
-        self.set_status("working")
-        
-        # Execute natural language task
-        result = self.execute_macro(
-            f"Perform this task: {self.task_description}. "
-            f"Save the result to {{{{task_result}}}}"
-        )
-        
-        self.set_status("completed")
-        return result
-
-# Create system
-system = MultiAgentSystem("my_project")
-
-# Add custom agent alongside built-in agents
-custom_agent = CustomTaskAgent("custom1", "Analyze sales data trends")
-collector = DataCollectorAgent("collector1", "database_source")
-researcher = ResearchAgent("researcher1", "AI trends analysis")
-
-system.add_agent(custom_agent)
-system.add_agent(collector)
-system.add_agent(researcher)
-
-# Execute agents
-results = system.run_parallel()  # Run simultaneously
-print(f"Results: {results['successful']} successful, {results['failed']} failed")
-```
-
-**Available Agent Types:**
-- `DataCollectorAgent`: One-time data collection
-- `MonitorAgent`: Continuous system monitoring
-- `ResearchAgent`: Multi-phase research workflow
-- `CoordinatorAgent`: Team management and coordination
-
-For detailed multi-agent usage, see [docs/multi_agent_guide.md](docs/multi_agent_guide.md)
-
-## Executing Multi-line Macro Files
-
-### From Python Code
-
-```python
-from nlm_interpreter import NLMSession
-from pathlib import Path
-
-# Create a session
-session = NLMSession(namespace="workflow")
-
-# Create and execute a multi-line macro
-macro_content = """
-Initialize data processing pipeline.
-
-Save 'started' to {{@pipeline_status}}.
-Set {{input_file}} to '/data/raw/dataset.csv'.
-Set {{output_file}} to '/data/processed/clean_data.csv'.
-
-Process the file {{input_file}} and save results to {{output_file}}.
-Update {{@pipeline_status}} to 'completed'.
-Save current timestamp to {{@last_run}}.
-"""
-
-# Execute the entire macro file
-result = session.execute(macro_content)
-print(f"Execution result: {result}")
-
-# Check the variables that were set
-print(f"Pipeline status: {session.get('@pipeline_status')}")
-print(f"Output file: {session.get('output_file')}")
-```
-
-Example macro content:
-```
-Initialize data processing pipeline.
-
-Save 'started' to {{@pipeline_status}}.
-Set {{input_file}} to '/data/raw/dataset.csv'.
-Set {{output_file}} to '/data/processed/clean_data.csv'.
-
-Process the file {{input_file}} and save results to {{output_file}}.
-Update {{@pipeline_status}} to 'completed'.
-Save current timestamp to {{@last_run}}.
-```
-
-### Batch Processing Multiple Macro Files
-
-```python
-from nlm_interpreter import NLMSession
-from pathlib import Path
-
-session = NLMSession(namespace="batch_process")
-
-# Process all macro files in a directory (example with custom directory)
-macro_dir = Path("my_macros")  # User-created directory
-for macro_file in macro_dir.glob("*.md"):
-    print(f"\nExecuting: {macro_file.name}")
-    
-    content = macro_file.read_text()
-    result = session.execute(content)
-    
-    # Log results
-    session.save(f"@last_macro", macro_file.name)
-    session.save(f"@last_result", result[:100])  # First 100 chars
-    
-print("\nAll macros executed successfully")
-print(f"Last macro: {session.get('@last_macro')}")
-```
-
 ## Command Line Usage
 
 ```bash
@@ -283,65 +60,6 @@ uv run nlm_interpreter.py -f my_workflow.md
 
 # Custom model/endpoint
 uv run nlm_interpreter.py -m llama3.1:8b -e http://localhost:11434/v1 "Save today to {{@date}}"
-```
-
-## Helper Tools
-
-```bash
-# Real-time variable monitoring
-uv run watch_variables.py
-
-# View variable change history
-uv run history_viewer.py recent --hours 24
-uv run history_viewer.py stats
-uv run history_viewer.py export history.json -f json
-```
-
-## Variable History Logging
-
-```python
-from variable_history import enable_logging, disable_logging, reset_logging
-
-# Enable logging (default: OFF)
-enable_logging()
-
-# Your session operations will be logged
-session = NLMSession(namespace="tracked")
-session.save("data", "value")  # This change is logged
-
-# Disable when done
-disable_logging()
-
-# Reset all history if needed  
-reset_logging()
-```
-
-## API Reference
-
-```python
-class NLMSession:
-    def __init__(self, namespace=None, model=None, endpoint=None)
-    
-    # Python API with @prefix support
-    def save(self, key, value)      # Use @key for global
-    def get(self, key)               # Use @key for global
-    def delete(self, key)            # Use @key for global
-    def list_local()                 # Session variables
-    def list_global()                # Global variables  
-    def clear_local()                # Clear session vars
-    
-    # Natural language execution
-    def execute(self, macro_content)
-```
-
-## Testing
-
-```bash
-# Run core tests
-uv run tests/test_nlm_interpreter.py
-uv run tests/test_variable_db_basic.py
-uv run tests/test_at_prefix_api.py
-uv run tests/test_global_sharing.py
 ```
 
 ## Model Support
@@ -406,6 +124,322 @@ uv run nlm_interpreter.py -m gpt-5-nano "Quick task: {{task}}"
 # Local model (default - no API key needed)
 uv run nlm_interpreter.py "Save 'test' to {{var}}"
 uv run nlm_interpreter.py -m gpt-oss:20b "Save 'test' to {{var}}"
+```
+
+## Try Multi-Haiku Example
+
+Experience natural language macros with our multi-agent haiku generation system:
+
+```bash
+# Navigate to multi-haiku directory
+cd multi_haiku
+
+# Quick test with local model (no API key needed)
+uv run simple_orchestrator.py --model local
+
+# Or with OpenAI models (requires API key)
+uv run simple_orchestrator.py --model gpt-5-mini
+```
+
+This example demonstrates:
+- **Natural language macro execution**: Agents use human-like instructions
+- **Multi-agent coordination**: Theme generation → Haiku creation → Selection process
+- **Global variable sharing**: Agents communicate through shared variables
+- **Unified syntax**: `{{variable}}` patterns work across all agents
+
+Expected output:
+```
+🎨 Generated theme: "Mountain sunrise"
+📝 Generated 3 haiku variations
+🏆 Selected best haiku based on imagery and emotion
+```
+
+## Python API Usage
+
+```python
+from nlm_interpreter import NLMSession
+
+# Create a session with isolated namespace
+session = NLMSession(namespace="my_agent")
+
+# Save local variables (session-scoped)
+session.save("task", "data_processing")
+session.save("status", "running")
+
+# Save global variables (shared across all sessions)
+session.save("@project_name", "AI Research 2024")
+session.save("@environment", "production")
+
+# Retrieve variables
+print(session.get("task"))           # "data_processing" 
+print(session.get("@project_name"))  # "AI Research 2024"
+
+# Execute natural language macros
+session.execute("Save 'Hello World' to {{greeting}}")
+print(session.get("greeting"))       # "Hello World"
+
+session.execute("Save current timestamp to {{@last_updated}}")
+print(session.get("@last_updated"))  # Timestamp value
+
+# List variables
+print(session.list_local())   # {"task": "data_processing", "status": "running", ...}
+print(session.list_global())  # {"project_name": "AI Research 2024", ...}
+
+# Delete variables
+session.delete("task")         # Delete local variable
+session.delete("@environment") # Delete global variable
+
+# Clear all local variables
+session.clear_local()
+```
+
+## Multi-Session Communication
+
+```python
+# Session 1: Data preparation
+data_session = NLMSession(namespace="data_prep")
+data_session.save("dataset", "/data/train.csv")
+data_session.save("@pipeline_status", "data_ready")  # Global
+
+# Session 2: Model training  
+model_session = NLMSession(namespace="training")
+status = model_session.get("@pipeline_status")      # "data_ready"
+model_session.save("@model_status", "training")      # Global
+
+# Both sessions see global updates
+print(data_session.get("@model_status"))   # "training"
+print(model_session.get("@model_status"))  # "training"
+```
+
+## Intermediate Features
+
+### SystemSession - Unified Global Variable Access
+
+For cleaner global variable management with unified @-prefixed syntax:
+
+```python
+from system_session import SystemSession
+
+# Create system session with unified @-syntax
+system = SystemSession()
+
+# Set global variables - both ways work the same
+system.set_global("status", "active")        # Auto @-prefix
+system.set_global("@config", "production")   # Explicit @-prefix
+
+# Get global variables - consistent interface
+status = system.get_global("status")         # Returns "active"  
+config = system.get_global("@config")        # Returns "production"
+
+# Natural language macros use same @-syntax
+system.execute("Save 'ready' to {{@system_status}}")
+system_status = system.get_global("system_status")  # Returns "ready"
+
+# List all global variables (clean keys without @)
+globals_dict = system.list_globals()
+# Returns: {"status": "active", "config": "production", "system_status": "ready"}
+
+# Context manager support
+with SystemSession() as system:
+    system.set_global("temp_config", "test_mode")
+    system.execute("Process configuration from {{@temp_config}}")
+    
+# Inherits all NLMSession functionality
+system.set_reasoning_effort("high")
+system.set_verbosity("medium")
+system.reset_context()  # Clear conversation history
+```
+
+**Key Benefits:**
+- **Interface Consistency**: `{{@variable}}` in macros matches `system.get_global("@variable")` in Python
+- **Auto @ Handling**: `set_global("var")` automatically becomes `@var` internally
+- **Full Inheritance**: All NLMSession features (execute, settings, context) work unchanged
+- **Backward Compatible**: Existing code continues to work without changes
+
+### Executing Multi-line Macro Files
+
+#### From Python Code
+
+```python
+from nlm_interpreter import NLMSession
+from pathlib import Path
+
+# Create a session
+session = NLMSession(namespace="workflow")
+
+# Create and execute a multi-line macro
+macro_content = """
+Initialize data processing pipeline.
+
+Save 'started' to {{@pipeline_status}}.
+Set {{input_file}} to '/data/raw/dataset.csv'.
+Set {{output_file}} to '/data/processed/clean_data.csv'.
+
+Process the file {{input_file}} and save results to {{output_file}}.
+Update {{@pipeline_status}} to 'completed'.
+Save current timestamp to {{@last_run}}.
+"""
+
+# Execute the entire macro file
+result = session.execute(macro_content)
+print(f"Execution result: {result}")
+
+# Check the variables that were set
+print(f"Pipeline status: {session.get('@pipeline_status')}")
+print(f"Output file: {session.get('output_file')}")
+```
+
+Example macro content:
+```
+Initialize data processing pipeline.
+
+Save 'started' to {{@pipeline_status}}.
+Set {{input_file}} to '/data/raw/dataset.csv'.
+Set {{output_file}} to '/data/processed/clean_data.csv'.
+
+Process the file {{input_file}} and save results to {{output_file}}.
+Update {{@pipeline_status}} to 'completed'.
+Save current timestamp to {{@last_run}}.
+```
+
+#### Batch Processing Multiple Macro Files
+
+```python
+from nlm_interpreter import NLMSession
+from pathlib import Path
+
+session = NLMSession(namespace="batch_process")
+
+# Process all macro files in a directory (example with custom directory)
+macro_dir = Path("my_macros")  # User-created directory
+for macro_file in macro_dir.glob("*.md"):
+    print(f"\nExecuting: {macro_file.name}")
+    
+    content = macro_file.read_text()
+    result = session.execute(content)
+    
+    # Log results
+    session.save(f"@last_macro", macro_file.name)
+    session.save(f"@last_result", result[:100])  # First 100 chars
+    
+print("\nAll macros executed successfully")
+print(f"Last macro: {session.get('@last_macro')}")
+```
+
+## Multi-Agent System
+
+Execute multiple agents in parallel for complex workflows:
+
+```python
+from multi_agent_system import MultiAgentSystem
+from agent_base import BaseAgent
+from agent_examples import DataCollectorAgent, ResearchAgent, MonitorAgent
+
+# Create custom agent by inheriting from BaseAgent
+class CustomTaskAgent(BaseAgent):
+    def __init__(self, agent_id: str, task_description: str):
+        super().__init__(agent_id)
+        self.task_description = task_description
+        
+    def run(self):
+        """Define your agent's behavior here"""
+        self.set_status("working")
+        
+        # Execute natural language task
+        result = self.execute_macro(
+            f"Perform this task: {self.task_description}. "
+            f"Save the result to {{{{task_result}}}}"
+        )
+        
+        self.set_status("completed")
+        return result
+
+# Create system
+system = MultiAgentSystem("my_project")
+
+# Add custom agent alongside built-in agents
+custom_agent = CustomTaskAgent("custom1", "Analyze sales data trends")
+collector = DataCollectorAgent("collector1", "database_source")
+researcher = ResearchAgent("researcher1", "AI trends analysis")
+
+system.add_agent(custom_agent)
+system.add_agent(collector)
+system.add_agent(researcher)
+
+# Execute agents
+results = system.run_parallel()  # Run simultaneously
+print(f"Results: {results['successful']} successful, {results['failed']} failed")
+```
+
+**Available Agent Types:**
+- `DataCollectorAgent`: One-time data collection
+- `MonitorAgent`: Continuous system monitoring
+- `ResearchAgent`: Multi-phase research workflow
+- `CoordinatorAgent`: Team management and coordination
+
+For detailed multi-agent usage, see [docs/multi_agent_guide.md](docs/multi_agent_guide.md)
+
+
+## Helper Tools
+
+```bash
+# Real-time variable monitoring
+uv run watch_variables.py
+
+# View variable change history
+uv run history_viewer.py recent --hours 24
+uv run history_viewer.py stats
+uv run history_viewer.py export history.json -f json
+```
+
+
+## API Reference
+
+```python
+class NLMSession:
+    def __init__(self, namespace=None, model=None, endpoint=None)
+    
+    # Python API with @prefix support
+    def save(self, key, value)      # Use @key for global
+    def get(self, key)               # Use @key for global
+    def delete(self, key)            # Use @key for global
+    def list_local()                 # Session variables
+    def list_global()                # Global variables  
+    def clear_local()                # Clear session vars
+    
+    # Natural language execution
+    def execute(self, macro_content)
+```
+
+## Advanced Features
+
+### Variable History Logging
+
+```python
+from variable_history import enable_logging, disable_logging, reset_logging
+
+# Enable logging (default: OFF)
+enable_logging()
+
+# Your session operations will be logged
+session = NLMSession(namespace="tracked")
+session.save("data", "value")  # This change is logged
+
+# Disable when done
+disable_logging()
+
+# Reset all history if needed  
+reset_logging()
+```
+
+## Testing
+
+```bash
+# Run core tests
+uv run tests/test_nlm_interpreter.py
+uv run tests/test_variable_db_basic.py
+uv run tests/test_at_prefix_api.py
+uv run tests/test_global_sharing.py
 ```
 
 ## Configuration
