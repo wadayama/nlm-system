@@ -157,31 +157,82 @@ session.clear_local()
 
 #### Natural Language Execution
 
-##### execute(macro_content)
+##### execute(macro_content, model=None, reasoning_effort=None, verbosity=None)
 
-Execute natural language macro commands.
+Execute natural language macro commands with optional per-call parameter overrides.
 
 **Parameters:**
 - `macro_content` (str): Natural language macro text with `{{variable}}` syntax
+- `model` (str, optional): Model override for this execution only
+- `reasoning_effort` (str, optional): Reasoning effort override ("low", "medium", "high")
+- `verbosity` (str, optional): Verbosity override ("low", "medium", "high")
 
 **Returns:** str - LLM response or execution result
 
 **Examples:**
 ```python
-# Simple variable assignment
+# Basic usage (no overrides - uses session defaults)
 result = session.execute("Save 'Hello World' to {{greeting}}")
 
-# Complex operations
-result = session.execute("""
-Process the data in {{input_file}} and:
-1. Clean the data
-2. Calculate statistics  
-3. Save results to {{@analysis_results}}
-""")
+# Speed-optimized execution
+result = session.execute("Quick status update to {{status}}", 
+                        model="gpt-5-nano")
 
-# Multi-variable operations
-result = session.execute("Set {{name}} to 'Alice' and {{age}} to '30'")
+# Quality-optimized execution  
+result = session.execute("Analyze complex data in {{dataset}}", 
+                        model="gpt-5", 
+                        reasoning_effort="high")
+
+# Privacy-focused execution
+result = session.execute("Process sensitive data to {{result}}", 
+                        model="gpt-oss:20b")
+
+# Combined overrides
+result = session.execute("Deep philosophical analysis of {{topic}}", 
+                        model="gpt-5",
+                        reasoning_effort="high", 
+                        verbosity="medium")
+
+# Multi-variable operations with overrides
+result = session.execute("Set {{name}} to 'Alice' and {{age}} to '30'",
+                        model="gpt-5-nano")  # Fast for simple tasks
 ```
+
+• • •
+
+#### Per-Call Parameter Override
+
+**Dynamic Model Selection** - The NLM System supports per-call parameter overrides, allowing you to optimize each macro execution for specific requirements without changing your session defaults.
+
+**Key Benefits:**
+- **Cost Optimization**: Use economical models for simple tasks, powerful models only when needed
+- **Speed vs Quality**: Choose fast models for time-critical tasks, deep reasoning for complex analysis  
+- **Privacy Control**: Use local models for sensitive data processing
+- **Backward Compatible**: Existing code continues working unchanged
+
+**Override Strategy Examples:**
+
+```python
+session = NLMSession(model="gpt-5-mini")  # Balanced default
+
+# Speed Strategy: Use nano for simple operations
+session.execute("Update {{status}} to 'ready'", model="gpt-5-nano")
+
+# Quality Strategy: Use gpt-5 + high reasoning for complex tasks
+session.execute("Analyze market trends and predict outcomes to {{forecast}}", 
+               model="gpt-5", reasoning_effort="high")
+
+# Privacy Strategy: Use local model for sensitive processing
+session.execute("Process confidential data to {{secure_result}}", 
+               model="gpt-oss:20b")
+
+# Cost Strategy: Minimize API costs with targeted model selection
+quick_tasks = ["Set {{var1}} to 'A'", "Set {{var2}} to 'B'"]
+for task in quick_tasks:
+    session.execute(task, model="gpt-5-nano")  # Cheapest option
+```
+
+**State Management:** All parameter overrides are temporary - your session returns to its original configuration after each call, ensuring consistent behavior.
 
 • • •
 
@@ -482,14 +533,39 @@ Get the current agent status.
 
 **Returns:** str - Current status
 
-##### execute_macro(macro_text)
+##### execute_macro(macro_text, model=None, reasoning_effort=None, verbosity=None)
 
-Execute a natural language macro.
+Execute a natural language macro with optional per-call parameter overrides.
 
 **Parameters:**
 - `macro_text` (str): Macro text with `{{variable}}` syntax
+- `model` (str, optional): Model override for this execution only
+- `reasoning_effort` (str, optional): Reasoning effort override ("low", "medium", "high") 
+- `verbosity` (str, optional): Verbosity override ("low", "medium", "high")
 
 **Returns:** str - Execution result
+
+**Examples:**
+```python
+class MyAgent(BaseAgent):
+    def run(self):
+        # Basic execution (uses agent's default model)
+        result1 = self.execute_macro("Process {{input_data}}")
+        
+        # Speed-critical task
+        result2 = self.execute_macro("Quick update to {{status}}", 
+                                   model="gpt-5-nano")
+        
+        # Quality-critical task  
+        result3 = self.execute_macro("Complex analysis of {{dataset}}", 
+                                   model="gpt-5", 
+                                   reasoning_effort="high")
+        
+        # Local processing for privacy
+        result4 = self.execute_macro("Handle sensitive {{data}}", 
+                                   model="gpt-oss:20b")
+        return [result1, result2, result3, result4]
+```
 
 ---
 

@@ -109,9 +109,25 @@ from nlm_interpreter import NLMSession
 session_openai = NLMSession(model="gpt-5-mini")  # Uses OpenAI API
 session_local = NLMSession()                     # Uses local LLM (default)
 
-# All models support the same API
+# Basic usage - all models support the same API
 session_openai.execute("Save 'Hello OpenAI' to {{message}}")
 session_local.execute("Save 'Hello Local' to {{message}}")
+
+# 🆕 Per-Call Model Override - NEW FEATURE!
+# Optimize each task with the right model without changing your session
+session = NLMSession(model="gpt-5-mini")  # Balanced default
+
+# Speed-critical: Use fastest, cheapest model
+session.execute("Quick update to {{status}}", model="gpt-5-nano")
+
+# Quality-critical: Use most capable model with deep reasoning  
+session.execute("Complex analysis of {{data}}", 
+               model="gpt-5", reasoning_effort="high")
+
+# Privacy-sensitive: Use local model
+session.execute("Process sensitive {{info}}", model="gpt-oss:20b")
+
+print(f"Session still using: {session.model}")  # "gpt-5-mini" - unchanged!
 ```
 
 ### Command Line Usage with Models

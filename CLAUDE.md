@@ -98,11 +98,61 @@ class MyAgent(BaseAgent):
     def run(self):
         """Main agent execution - implement your logic here"""
         self.set_status("running")
-        # Your agent logic
+        
+        # Adaptive model usage - new capability!
+        # Quick tasks: use fast, economical model
+        self.execute_macro("Initialize workspace to {{workspace}}", 
+                          model="gpt-5-nano")
+        
+        # Complex tasks: use powerful model with deep reasoning
+        self.execute_macro("""
+        Analyze the complex problem and develop comprehensive solution.
+        Save detailed analysis to {{solution}}
+        """, model="gpt-5", reasoning_effort="high")
+        
+        # Privacy tasks: use local model
+        self.execute_macro("Handle confidential data to {{secure_result}}", 
+                          model="gpt-oss:20b")
+        
         self.set_status("completed")
+        # Session model unchanged after all overrides!
 ```
 
-### 3. Test Creation Template
+### 3. Per-Call Model Selection Patterns
+```python
+# Pattern 1: Workflow optimization
+class WorkflowAgent(BaseAgent):
+    def __init__(self, agent_id):
+        super().__init__(agent_id, model="gpt-5-mini")  # Balanced default
+    
+    def process_pipeline(self):
+        # Stage 1: Fast preparation
+        self.execute_macro("Setup data pipeline to {{pipeline}}", 
+                          model="gpt-5-nano")
+        
+        # Stage 2: Deep analysis  
+        self.execute_macro("Perform complex analysis on {{input_data}}", 
+                          model="gpt-5", reasoning_effort="high")
+        
+        # Stage 3: Normal processing (uses session default)
+        self.execute_macro("Generate summary from {{analysis}}")
+
+# Pattern 2: Cost-aware batch processing
+def process_batch_efficiently(session, tasks):
+    simple_tasks = [t for t in tasks if t.complexity == "low"]
+    complex_tasks = [t for t in tasks if t.complexity == "high"]
+    
+    # Batch simple tasks with cheap model
+    for task in simple_tasks:
+        session.execute(f"Process {task.description}", model="gpt-5-nano")
+    
+    # Complex tasks with premium model
+    for task in complex_tasks:
+        session.execute(f"Analyze {task.description}", 
+                       model="gpt-5", reasoning_effort="high")
+```
+
+### 4. Test Creation Template
 ```python
 def test_capability_problem(session, input_data, expected_output, problem_type):
     session.clear_local()

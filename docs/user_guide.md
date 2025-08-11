@@ -366,6 +366,137 @@ if session.count_lines("experience_log") > 1000:
     session.save("experience_log", recent_memory)  # Keep only recent 200 entries
 ```
 
+### Per-Call Model Selection and Optimization
+
+The NLM System provides dynamic model selection capabilities, allowing you to optimize performance, cost, and quality on a per-execution basis:
+
+#### Dynamic Model Switching
+
+```python
+from nlm_interpreter import NLMSession
+
+# Create session with balanced default model
+session = NLMSession("adaptive_session", model="gpt-5-mini")
+
+# Speed-critical tasks: Use fastest, most economical model
+session.execute("Update {{status}} to 'processing'", model="gpt-5-nano")
+session.execute("Set {{counter}} to increment by 1", model="gpt-5-nano") 
+
+# Quality-critical tasks: Use most capable model with deep reasoning
+analysis = session.execute("""
+Analyze the market data in {{market_data}} and:
+1. Identify key trends and patterns
+2. Assess risk factors and opportunities  
+3. Generate strategic recommendations
+Save comprehensive analysis to {{market_analysis}}
+""", model="gpt-5", reasoning_effort="high")
+
+# Privacy-sensitive tasks: Use local model
+session.execute("Process personal information {{pii_data}} and anonymize", 
+               model="gpt-oss:20b")
+
+print(f"Session model after all operations: {session.model}")  # Still "gpt-5-mini"
+```
+
+#### Cost Optimization Strategies
+
+```python
+# Strategy 1: Batch simple operations with economical model
+simple_updates = [
+    "Set {{task_1}} to 'completed'",
+    "Set {{task_2}} to 'in_progress'", 
+    "Set {{task_3}} to 'pending'"
+]
+
+for task in simple_updates:
+    session.execute(task, model="gpt-5-nano")  # Minimize cost for simple tasks
+
+# Strategy 2: Use premium model only for complex analysis
+complex_result = session.execute("""
+Conduct comprehensive competitive analysis of our market position.
+Consider pricing, features, customer satisfaction, and market share.
+Provide actionable strategic recommendations.
+Save detailed analysis to {{competitive_analysis}}
+""", model="gpt-5", reasoning_effort="high", verbosity="high")
+```
+
+#### Workflow Optimization Patterns
+
+```python
+class OptimizedWorkflowAgent(BaseAgent):
+    def __init__(self, agent_id):
+        super().__init__(agent_id, model="gpt-5-mini")  # Balanced default
+    
+    def run(self):
+        # Phase 1: Quick data preparation (speed optimized)
+        self.execute_macro("Initialize data structures to {{data_prep}}", 
+                          model="gpt-5-nano")
+        
+        # Phase 2: Core analysis (quality optimized)
+        self.execute_macro("""
+        Perform deep analysis on prepared data:
+        - Statistical analysis and pattern detection
+        - Trend identification and forecasting
+        - Risk assessment and mitigation strategies
+        Save comprehensive results to {{analysis_results}}
+        """, model="gpt-5", reasoning_effort="high")
+        
+        # Phase 3: Report generation (balanced)
+        self.execute_macro("Generate executive summary from {{analysis_results}}")
+        
+        # Phase 4: Sensitive data handling (privacy optimized) 
+        self.execute_macro("Process confidential elements to {{secure_output}}", 
+                          model="gpt-oss:20b")
+        
+        return self.session.get("secure_output")
+```
+
+#### Multi-Agent Coordination with Dynamic Models
+
+```python
+# Coordinator uses different models based on task complexity
+coordinator = NLMSession("coordinator", model="gpt-5-mini")
+
+# Simple coordination tasks
+coordinator.execute("Update {{@system_status}} to 'agents_running'", 
+                   model="gpt-5-nano")
+
+# Complex decision making
+coordinator.execute("""
+Analyze agent performance data {{@agent_metrics}} and:
+1. Identify bottlenecks and optimization opportunities
+2. Recommend resource reallocation strategies  
+3. Update coordination strategy
+Save recommendations to {{@coordination_strategy}}
+""", model="gpt-5", reasoning_effort="high")
+```
+
+#### Model Selection Guidelines
+
+**gpt-5-nano**: Best for
+- Simple variable assignments
+- Status updates
+- Quick confirmations
+- High-volume batch operations
+
+**gpt-5-mini**: Best for  
+- General-purpose tasks
+- Balanced speed/quality needs
+- Most common operations
+- Default choice for agents
+
+**gpt-5**: Best for
+- Complex analysis and reasoning
+- Critical business decisions
+- Creative and strategic tasks
+- When accuracy is paramount
+
+**gpt-oss:20b** (Local): Best for
+- Privacy-sensitive data
+- High-volume processing
+- Offline operations
+- Cost-free processing
+
 ### Advanced Natural Language Processing
 
 ```python
