@@ -77,12 +77,16 @@ def main():
     print(f"Haiku generation completed: {results['successful']} successful, {results['failed']} failed")
     
     # Show generated haiku progress
-    print("\n🎋 Haiku Generation Status:")
+    print("\n🎋 Generated Haiku:")
     for i in range(1, 5):
         haiku = system_session.get_global(f"@haiku_{i}")
         theme = system_session.get_global(f"@theme_{i}")
         if haiku:
-            print(f"  ✅ Haiku {i} ({theme}): Generated")
+            print(f"  ✅ Haiku {i} ({theme}):")
+            # Indent each line of the haiku
+            for line in haiku.split('\n'):
+                if line.strip():
+                    print(f"     {line.strip()}")
         else:
             print(f"  ❌ Haiku {i} ({theme}): Failed")
 
@@ -92,37 +96,8 @@ def main():
     selector_agent.run()
     print("Best haiku selection completed!")
 
-    # Display all results
-    print("\n=== Generated Themes and Haiku ===")
-    for i in range(1, 5):
-        theme = system_session.get_global(f"@theme_{i}")
-        haiku = system_session.get_global(f"@haiku_{i}")
-        print(f"\nTheme {i}: {theme}")
-        print(f"Haiku {i}:")
-        if haiku:
-            print(haiku)
-        else:
-            print("  (generation failed)")
-
-    # Display best selection
-    print("\n" + "="*50)
-    print("🏆 BEST HAIKU SELECTION 🏆")
-    print("="*50)
-
-    best_haiku = system_session.get_global("@best_haiku")
-    best_theme = system_session.get_global("@best_theme")
-    best_number = system_session.get_global("@best_haiku_number")
-    selection_reasoning = system_session.get_global("@selection_reasoning")
-
-    if best_haiku:
-        print(f"Winner: Haiku #{best_number}")
-        print(f"Theme: {best_theme}")
-        print(f"\nSelected Haiku:")
-        print(best_haiku)
-        print(f"\nSelection Reasoning:")
-        print(selection_reasoning)
-    else:
-        print("Best haiku selection failed.")
+    # Results will be displayed by external monitoring
+    # Orchestration complete
 
 
 if __name__ == "__main__":
