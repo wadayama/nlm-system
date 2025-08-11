@@ -52,13 +52,10 @@ class NLMSession:
             # OpenAI API configuration
             self.endpoint = endpoint or "https://api.openai.com/v1"
             self.api_key = api_key or self._load_openai_key()
-            print(f"Using OpenAI API: {self.model}")
-            self._show_openai_warning()
         else:
             # Local LLM configuration (gpt-oss:20b or others)
             self.endpoint = endpoint or "http://localhost:1234/v1"  # LMStudio default
             self.api_key = api_key or "ollama"
-            print(f"Using local LLM: {self.model}")
         
         # Initialize OpenAI client
         self.client = OpenAI(
@@ -261,18 +258,9 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         )
 
     def _show_openai_warning(self):
-        """Show warning about OpenAI API usage and costs"""
-        model_costs = {
-            "gpt-5": "Premium tier",
-            "gpt-5-mini": "Standard tier", 
-            "gpt-5-nano": "Economy tier"
-        }
-        
-        cost_info = model_costs.get(self.model, "Standard tier")
-        print(f"Warning: Using OpenAI API - {cost_info}")
-        print("   Charges will apply to your OpenAI account")
-        print(f"   Model: {self.model}")
-        print()
+        """Show warning about OpenAI API usage and costs - method kept for compatibility"""
+        # Warning messages removed to reduce noise
+        pass
 
 
     def _resolve_variable_name(self, variable_name):
