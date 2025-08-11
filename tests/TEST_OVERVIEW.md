@@ -125,10 +125,7 @@ These tests validate specific features and should be run when working on related
   - Long conversation handling
   - Run for conversational applications
 
-- **`test_conversation_history.py`** - History management
-  - Conversation state tracking
-  - History persistence validation
-  - Run for history feature work
+- **Conversation history tests removed** - Feature deprecated for performance
 
 ### 🔵 Specialized Tests - Run for Specific Scenarios
 

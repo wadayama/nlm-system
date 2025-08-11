@@ -247,7 +247,7 @@ with SystemSession() as system:
 # Inherits all NLMSession functionality
 system.set_reasoning_effort("high")
 system.set_verbosity("medium")
-system.reset_context()  # Clear conversation history
+# All NLMSession methods available
 ```
 
 **Key Benefits:**

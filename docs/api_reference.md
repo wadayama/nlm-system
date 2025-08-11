@@ -204,19 +204,6 @@ Set the verbosity level for LLM responses (OpenAI models only).
 session.set_verbosity("low")  # More concise responses
 ```
 
-• • •
-
-##### reset_context()
-
-Reset the conversation context/history.
-
-**Returns:** None
-
-**Example:**
-```python
-session.reset_context()
-```
-
 ---
 
 ### 🌐 SystemSession

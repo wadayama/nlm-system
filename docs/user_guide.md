@@ -87,7 +87,7 @@ globals_dict = system.list_globals()
 # SystemSession inherits all NLMSession functionality
 system.set_reasoning_effort("high")
 system.execute("Process the data using configuration from {{@config}}")
-system.reset_context()  # Clear conversation history
+# Full NLMSession functionality available
 ```
 
 **Key SystemSession Benefits:**
