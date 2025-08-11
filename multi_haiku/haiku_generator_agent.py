@@ -21,7 +21,7 @@ class HaikuGeneratorAgent(BaseAgent):
         haiku_prompt = f"""
         # Haiku Generation Task
         
-        Create a beautiful haiku poem based on the theme in {{{{@theme_{self.theme_number}}}}}.
+        Create a beautiful haiku poem based on the theme in {{@theme_{self.theme_number}}}.
 
         ## Traditional Haiku Principles
         - 5-7-5 syllable structure
@@ -34,7 +34,7 @@ class HaikuGeneratorAgent(BaseAgent):
         Create an authentic haiku that captures the essence and mood of the theme.
 
         ## Output
-        Save the completed haiku to {{{{@haiku_{self.theme_number}}}}}
+        Save the completed haiku to {{@haiku_{self.theme_number}}}
         """.strip()
         
         self.execute_macro(haiku_prompt)
