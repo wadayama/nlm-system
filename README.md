@@ -652,6 +652,10 @@ Default settings:
 
 *Code generation and documentation enhanced with [Claude Code](https://claude.ai/code)*
 
+## Related Projects
+
+Based on the foundational work: [claude-code-macro-programming-en](https://github.com/wadayama/claude-code-macro-programming-en)
+
 ## License
 
 This project is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).
