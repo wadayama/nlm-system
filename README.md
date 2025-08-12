@@ -218,7 +218,7 @@ uv run nlm_interpreter.py -m gpt-oss:120b "Save 'test' to {{var}}"
 **Usage with LMStudio (Default):**
 ```bash
 # Standard model (default)
-uv run nlm_interpreter.py "Save 'test' to {{var}}"  # Uses gpt-oss:20b by default
+uv run nlm_interpreter.py "Save 'test' to {{var}}"  # CLI default: gpt-oss:20b
 
 # Specify model explicitly
 uv run nlm_interpreter.py -m gpt-oss:20b "Save 'test' to {{var}}"   # Standard
