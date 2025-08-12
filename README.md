@@ -650,6 +650,8 @@ Default settings:
 
 **Tadashi Wadayama**
 
+*Code generation and documentation enhanced with [Claude Code](https://claude.ai/code)*
+
 ## License
 
 This project is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).
