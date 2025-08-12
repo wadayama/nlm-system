@@ -16,7 +16,7 @@ def parse_arguments():
     )
     
     parser.add_argument('--model', '-m', 
-                       choices=['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'local', 'gpt-oss:20b'],
+                       choices=['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'local', 'gpt-oss:20b', 'gpt-oss:120b'],
                        default='gpt-5-mini',
                        help='LLM model to use for decision making (default: gpt-5-mini)')
     

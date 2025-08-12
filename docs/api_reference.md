@@ -31,14 +31,19 @@ NLMSession(namespace=None, model=None, endpoint=None)
 - `"gpt-5"` - OpenAI GPT-5 (Premium tier)
 - `"gpt-5-mini"` - OpenAI GPT-5-mini (Standard tier) 
 - `"gpt-5-nano"` - OpenAI GPT-5-nano (Economy tier)
-- `"gpt-oss:20b"` - Local LLM via LMStudio (default)
+- `"gpt-oss:20b"` - Standard local LLM via LMStudio/Ollama (CLI default)
+- `"gpt-oss:120b"` - Large local LLM for enhanced performance
 
 **Example:**
 ```python
 from nlm_interpreter import NLMSession
 
-# Default session (local LLM)
+# Default session (uses gpt-5-mini)
 session = NLMSession()
+
+# Local LLM sessions
+session_20b = NLMSession(model="gpt-oss:20b")   # Standard local
+session_120b = NLMSession(model="gpt-oss:120b") # Large local
 
 # Named session with OpenAI model
 session = NLMSession(namespace="data_processing", model="gpt-5-mini")
@@ -749,8 +754,10 @@ Reset/clear all variable change history.
 
 ### Default Settings
 
-- **Model**: `"gpt-oss:20b"` (Local LLM)
-- **Endpoint**: `http://localhost:1234/v1` (LMStudio default)
+- **API Default**: `NLMSession()` uses `"gpt-5-mini"` (requires OpenAI API key)
+- **CLI Default**: `uv run nlm_interpreter.py` uses `"gpt-oss:20b"` (local LLM)
+- **Supported Local Models**: `"gpt-oss:20b"`, `"gpt-oss:120b"`
+- **Endpoint**: Auto-configured (`http://localhost:1234/v1` for local, OpenAI API for gpt-5 series)
 - **Database**: `variables.db` (SQLite)
 - **History Logging**: Disabled by default
 

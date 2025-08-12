@@ -41,6 +41,9 @@ class NLMSession:
         # OpenAI models (gpt-5 series)
         openai_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
         
+        # Local models (gpt-oss series)
+        local_models = ["gpt-oss:20b", "gpt-oss:120b"]
+        
         # Default model
         self.model = model or "gpt-5-mini"
         
@@ -466,13 +469,20 @@ Available tools: save_variable, get_variable, list_variables, delete_variable, d
         # OpenAI models (gpt-5 series)
         openai_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
         
+        # Local models (gpt-oss series)
+        local_models = ["gpt-oss:20b", "gpt-oss:120b"]
+        
         try:
             if temp_model in openai_models:
                 # Switch to OpenAI configuration
                 self.endpoint = "https://api.openai.com/v1"
                 self.api_key = self._load_openai_key()
-            else:
+            elif temp_model in local_models:
                 # Switch to Local LLM configuration  
+                self.endpoint = "http://localhost:1234/v1"
+                self.api_key = "ollama"
+            else:
+                # Switch to Local LLM configuration (fallback for other models)
                 self.endpoint = "http://localhost:1234/v1"
                 self.api_key = "ollama"
             

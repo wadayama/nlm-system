@@ -33,11 +33,86 @@ pip install package_name   # ❌ Won't persist in project configuration
 
 ## Features
 
-- **Natural Language Macros**: Execute human-like instructions with `{{variable}}` syntax
-- **Unified Variable Syntax**: `@prefix` for global variables across NLM and Python
-- **Session-based Architecture**: Isolated namespaces with controlled sharing
-- **Multi-Agent Support**: Externalized state for distributed agent systems
-- **OpenAI-compatible**: Works with Ollama, LMStudio, and OpenAI APIs
+### 🧠 Natural Language Intelligence
+- **Human-like Instructions**: Execute complex tasks with natural language
+- **Transparent Reasoning**: All AI decisions visible through variable changes
+- **Direct Questions**: Supports both variable operations and direct Q&A
+
+### 🗄️ Robust State Management  
+- **SQLite Backend**: All variables stored in persistent, ACID-compliant database
+- **Crash Resilient**: State survives process restarts and failures
+- **Multi-Agent Safe**: Concurrent access with proper isolation
+- **Complete Audit Trail**: Every variable change permanently logged
+
+### 🔒 Security & Trust
+- **Sandboxed AI**: LLM limited to safe variable operations only
+- **Observable Actions**: No hidden side effects - all changes are visible
+- **Compliance Ready**: Built-in audit logging for regulatory requirements
+- **Fail-Safe Design**: Even AI errors cannot damage external systems
+
+### 🚀 Developer Experience
+- **Unified Syntax**: Same `@prefix` variables in both NLM and Python
+- **Session Isolation**: Clean namespaces prevent variable conflicts  
+- **Multiple Models**: OpenAI, Ollama, LMStudio with seamless switching
+- **Rich API**: Full programmatic control alongside natural language
+
+## Architecture & Trust
+
+### 🏗️ Externalized State Management
+**All variable state is managed in SQLite database, outside the LLM process:**
+
+- **Crash Resilient**: Variables persist even if the process crashes
+- **Multi-Process Safe**: Multiple agents can safely share state
+- **Fully Observable**: Complete audit trail of all AI decisions
+- **Zero Hidden State**: No internal LLM state - everything is visible
+
+### 🔍 Transparent AI Operations
+**Every LLM decision is recorded through variable changes:**
+
+```python
+# LLM's thought process is completely visible
+session.execute("Analyze risk and save assessment to {{risk_level}}")
+# → All reasoning steps are captured as variable updates
+# → Full audit trail for compliance and debugging
+```
+
+### 🛡️ Security by Design
+- **Sandboxed Operations**: LLM can only modify variables, not files or system
+- **Predictable Behavior**: All side effects happen through observable variables  
+- **Fail-Safe**: Even if LLM "hallucinates", only variables are affected
+- **Complete Audit**: Every decision step is permanently logged
+
+### ⚡ Performance Benefits
+- **Persistent Memory**: Variables survive between sessions
+- **Efficient Sharing**: SQLite enables fast multi-agent coordination
+- **Scalable State**: Database can handle large variable collections
+
+## Why NLM System?
+
+### Traditional AI Systems
+```python
+result = ai_model.generate("Make a business decision")
+# ❌ Black box - what did it consider?
+# ❌ No audit trail - how to explain the decision?
+# ❌ Crash = lost context
+```
+
+### NLM System Approach
+```python
+session.execute("""
+Analyze market conditions and save:
+- Risk factors to {{risk_factors}}
+- Opportunity score to {{opportunity_score}}  
+- Final recommendation to {{decision}}
+- Reasoning to {{decision_rationale}}
+""")
+# ✅ Every factor is visible and auditable
+# ✅ Decision process is completely traceable
+# ✅ State persists in SQLite database
+# ✅ Compliant with explainable AI requirements
+```
+
+**Result: Trustworthy AI you can actually deploy in production.**
 
 ## Quick Start
 
@@ -64,15 +139,16 @@ uv run nlm_interpreter.py -m llama3.1:8b -e http://localhost:11434/v1 "Save toda
 
 ## Model Support
 
-The NLM system supports 4 models with automatic provider switching based on model name:
+The NLM system supports 5 models with automatic provider switching based on model name:
 
 ### 🌐 OpenAI Models (Requires API Key)
 - `gpt-5` - Most capable model (Premium tier)
 - `gpt-5-mini` - Balanced performance and cost (Standard tier, **API default**)
 - `gpt-5-nano` - Fast and economical (Economy tier)
 
-### 💻 Local Model (No API charges)
-- `gpt-oss:20b` - Local LLM via LMStudio (**CLI default**)
+### 💻 Local Models (No API charges)
+- `gpt-oss:20b` - Standard local LLM via LMStudio/Ollama (**CLI default**)
+- `gpt-oss:120b` - Large local LLM for enhanced performance
 
 **Default Behavior:**
 - `NLMSession()` → `gpt-5-mini` (API usage, requires key)
@@ -113,8 +189,8 @@ For local LLM usage (no API costs, privacy-focused), set up either Ollama or LMS
 # Install Ollama (https://ollama.ai)
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Pull a model (example: 20B parameter model)
-ollama pull llama2:13b
+# Download and run a compatible model
+ollama pull your-preferred-model
 
 # Start Ollama server (runs on http://localhost:11434)
 ollama serve
@@ -122,26 +198,31 @@ ollama serve
 
 **Usage with Ollama:**
 ```bash
-# Use Ollama endpoint
-uv run nlm_interpreter.py -e http://localhost:11434/v1 -m llama2:13b "Save 'test' to {{var}}"
+# Standard 20B model
+uv run nlm_interpreter.py -e http://localhost:11434/v1 -m gpt-oss:20b "Save 'test' to {{var}}"
+
+# Large 120B model for enhanced performance
+uv run nlm_interpreter.py -e http://localhost:11434/v1 -m gpt-oss:120b "Save 'test' to {{var}}"
 
 # Or set environment variable
 export NLM_ENDPOINT="http://localhost:11434/v1"
-uv run nlm_interpreter.py -m llama2:13b "Save 'test' to {{var}}"
+uv run nlm_interpreter.py -m gpt-oss:20b "Save 'test' to {{var}}"
+uv run nlm_interpreter.py -m gpt-oss:120b "Save 'test' to {{var}}"
 ```
 
 ### Option 2: LMStudio Setup
 1. Download and install [LMStudio](https://lmstudio.ai/)
-2. Download a model (e.g., Code Llama, Llama 2)
+2. Download a compatible model (20B or 120B parameters)
 3. Start the local server (default: http://localhost:1234)
 
 **Usage with LMStudio (Default):**
 ```bash
-# LMStudio is the default local setup
+# Standard model (default)
 uv run nlm_interpreter.py "Save 'test' to {{var}}"  # Uses gpt-oss:20b by default
 
-# Or specify model explicitly  
-uv run nlm_interpreter.py -m "your-model-name" "Save 'test' to {{var}}"
+# Specify model explicitly
+uv run nlm_interpreter.py -m gpt-oss:20b "Save 'test' to {{var}}"   # Standard
+uv run nlm_interpreter.py -m gpt-oss:120b "Save 'test' to {{var}}"  # Large
 ```
 
 ### Usage Examples
@@ -151,11 +232,13 @@ from nlm_interpreter import NLMSession
 
 # Automatic provider selection based on model name
 session_default = NLMSession()                   # Uses gpt-5-mini (default)
-session_local = NLMSession(model="gpt-oss:20b")  # Uses local LLM
+session_local = NLMSession(model="gpt-oss:20b")  # Uses standard local LLM
+session_large = NLMSession(model="gpt-oss:120b") # Uses large local LLM
 
 # Basic usage - all models support the same API
 session_default.execute("Save 'Hello Default' to {{message}}")
-session_local.execute("Save 'Hello Local' to {{message}}")
+session_local.execute("Save 'Hello Local 20B' to {{message}}")
+session_large.execute("Save 'Hello Local 120B' to {{message}}")
 
 # 🆕 Per-Call Model Override - NEW FEATURE!
 # Optimize each task with the right model without changing your session
@@ -168,10 +251,36 @@ session.execute("Quick update to {{status}}", model="gpt-5-nano")
 session.execute("Complex analysis of {{data}}", 
                model="gpt-5", reasoning_effort="high")
 
-# Privacy-sensitive: Use local model
-session.execute("Process sensitive {{info}}", model="gpt-oss:20b")
+# Privacy-sensitive: Use local models
+session.execute("Process sensitive {{info}}", model="gpt-oss:20b")   # Standard local
+session.execute("Deep analysis of {{data}}", model="gpt-oss:120b")   # Large local
 
 print(f"Session still using: {session.model}")  # "gpt-5-mini" - unchanged!
+```
+
+### State Management Benefits
+
+```python
+# Persistent memory across sessions
+session1 = NLMSession("project_analysis")
+session1.execute("Save project status 'in_progress' to {{@status}}")
+
+# Later, in different process...
+session2 = NLMSession("project_monitor") 
+status = session2.get("@status")  # "in_progress" - persisted in SQLite
+
+# Complete audit trail
+session.save("decision", "approve_loan")
+# → Automatically logged with timestamp, session, and full context
+# → Perfect for compliance reporting and decision accountability
+
+# Multi-agent coordination through shared state
+agent_a = NLMSession("data_processor")
+agent_b = NLMSession("report_generator")
+
+agent_a.execute("Process data and save results to {{@processed_data}}")
+agent_b.execute("Generate report from {{@processed_data}}")  
+# → Seamless data handoff through persistent SQLite storage
 ```
 
 ### Command Line Usage with Models
