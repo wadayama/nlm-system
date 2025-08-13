@@ -77,3 +77,5 @@ openai_key
 .ollama/
 .lmstudio/
 model_cache/
+
+# Work in progress (not ready for public)
