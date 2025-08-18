@@ -1,12 +1,18 @@
 # LLM Direct Selection Packet Scheduler
 
-An intelligent packet scheduling system where an LLM autonomously selects 3 packets from 4 queues each turn, demonstrating emergent optimization strategies without predefined rules.
+An intelligent packet scheduling system where an LLM autonomously selects packets from 4 queues each turn, demonstrating emergent optimization strategies without predefined rules. Now with variable slot availability and future prediction capabilities.
 
 ## Quick Start
 
 ```bash
-# Run the LLM-based packet scheduler
+# Run the fixed 3-slot scheduler
 uv run llm_direct_scheduler.py
+
+# Run the variable slot scheduler (1-4 slots with prediction)
+uv run variable_slot_scheduler.py
+
+# Custom probability distribution for slots
+uv run variable_slot_scheduler.py -p 0.1 0.2 0.5 0.2  # Favors 3 slots
 ```
 
 The system will:
@@ -19,16 +25,18 @@ The system will:
 
 ### Core Concept
 - **4 packet queues** with size limit of 5 (overflow penalties apply)
-- **3 packets selected per turn** by LLM without predefined strategies
+- **Variable or fixed slots**: 3 fixed slots OR 1-4 variable slots per turn
+- **Future prediction**: LLM sees next turn's slot availability (variable mode)
 - **Dynamic packet properties**: value (1-10), deadline (5-15)
 - **Real-time adaptation** based on queue states and urgency
 
 ### LLM Decision Process
 Each turn, the LLM:
 1. Observes all queue states with packet details
-2. Considers urgency levels (🔴 Critical, 🟡 Urgent, 🟢 Normal)
-3. Selects 3 packets with clear reasoning
-4. Adapts strategy based on previous outcomes
+2. Sees current and next turn slot availability (variable mode)
+3. Considers urgency levels (🔴 Critical, 🟡 Urgent, 🟢 Normal)
+4. Selects packets matching available slots with clear reasoning
+5. Adapts strategy based on previous outcomes and future predictions
 
 ## Key Features
 
@@ -59,9 +67,11 @@ Queue 1: 6 packets [⚠️ OVER LIMIT]
 ## Files
 
 ### Core Implementation
-- **`llm_direct_scheduler.py`** - Main LLM-based scheduler
+- **`llm_direct_scheduler.py`** - Fixed 3-slot LLM scheduler
+- **`variable_slot_scheduler.py`** - Variable slot scheduler with prediction
 - **`packet.py`** - Packet and queue management classes
 - **`implementation.md`** - Detailed technical documentation
+- **`future_extensions_plan.md`** - Design for advanced features (Japanese)
 
 ### Archive
 - **`archive/`** - Previous implementations including:
@@ -114,8 +124,19 @@ run_llm_direct_simulation(
 ### Packet Properties
 - **Value**: Random integer 1-10
 - **Deadline**: Random integer 5-15  
-- **Arrival rate**: 3 + expired_count packets per turn
+- **Arrival rate**: Matches slot count per turn
 - **Queue limit**: 5 packets (penalties for exceeding)
+
+### Variable Slot Configuration
+```bash
+# Equal probability for all slot counts (default)
+uv run variable_slot_scheduler.py  # 25% each for 1,2,3,4 slots
+
+# Custom distributions
+uv run variable_slot_scheduler.py -p 0.1 0.2 0.5 0.2  # 3-slot heavy
+uv run variable_slot_scheduler.py -p 0.4 0.1 0.1 0.4  # Extreme variance
+uv run variable_slot_scheduler.py -p 0.05 0.45 0.45 0.05  # Stable 2-3 slots
+```
 
 ## Performance Metrics
 
@@ -153,6 +174,7 @@ This project evolved from:
 1. Two-agent negotiation system
 2. Strategy-based LLM scheduler  
 3. Fixed algorithm comparisons
-4. **Current**: Direct LLM selection with emergent strategies
+4. Direct LLM selection with emergent strategies
+5. **Current**: Variable slot scheduler with future prediction
 
-The current implementation represents the most sophisticated and autonomous approach, allowing pure LLM intelligence to drive packet scheduling decisions.
+The latest implementation adds temporal reasoning capabilities, allowing the LLM to make strategic decisions based on predicted future resource availability.
