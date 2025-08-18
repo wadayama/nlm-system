@@ -1,88 +1,88 @@
-# パケットゲーム将来拡張設計書
+# Packet Game Future Extensions Design Document
 
-## 概要
+## Overview
 
-現在の固定3スロットシステムから、可変スロット数と将来予測を導入した高度なパケットスケジューリングシステムへの拡張設計。LLMが時系列推論と戦略的計画を行う研究プラットフォームとして発展させる。
+Design for extending the current fixed 3-slot system to an advanced packet scheduling system with variable slot counts and future prediction capabilities. This will develop the system into a research platform where LLMs perform temporal reasoning and strategic planning.
 
-## 現在のシステム状況
+## Current System Status
 
-### 現在の制約
-- **固定3スロット/ターン**: 毎回同じリソース制約
-- **単一ターン最適化**: 現在状態のみを考慮した判断
-- **決定論的環境**: 予測可能なシステム動作
+### Current Constraints
+- **Fixed 3 slots/turn**: Same resource constraints every turn
+- **Single-turn optimization**: Decisions considering only current state
+- **Deterministic environment**: Predictable system behavior
 
-### 拡張の動機
-- **現実性の向上**: 無線チャネルの変動を反映
-- **戦略的思考**: 将来を考慮した意思決定
-- **複雑性増加**: より高度なAI推論の評価
+### Motivation for Extensions
+- **Improved realism**: Reflecting wireless channel variations
+- **Strategic thinking**: Decision-making considering future states
+- **Increased complexity**: Evaluation of more advanced AI reasoning
 
-## 拡張設計詳細
+## Extension Design Details
 
-### 1. 可変スロットシステム
+### 1. Variable Slot System
 
-#### 1.1 チャネル状況モデル
+#### 1.1 Channel Condition Modeling
 ```python
 class ChannelCondition:
-    """無線チャネル状況をモデル化"""
+    """Models wireless channel conditions"""
     
     def __init__(self):
-        self.quality = 0.5        # チャネル品質 (0.0-1.0)
-        self.noise_level = 0.3    # ノイズレベル (0.0-1.0)
-        self.congestion = 0.4     # 混雑度 (0.0-1.0)
-        self.weather_factor = 1.0 # 天候影響 (0.5-1.5)
+        self.quality = 0.5        # Channel quality (0.0-1.0)
+        self.noise_level = 0.3    # Noise level (0.0-1.0)
+        self.congestion = 0.4     # Congestion level (0.0-1.0)
+        self.weather_factor = 1.0 # Weather impact (0.5-1.5)
     
     def update_markov_chain(self):
-        """マルコフ連鎖による状態遷移"""
-        # 品質の時系列変化（トレンド + ランダム）
+        """State transitions using Markov chain"""
+        # Time-series changes in quality (trend + random)
         trend = random.uniform(-0.1, 0.1)
         noise = random.uniform(-0.05, 0.05)
         self.quality = max(0.0, min(1.0, self.quality + trend + noise))
         
-        # 混雑度の日内変動パターン
-        time_factor = math.sin(turn * 0.1) * 0.2  # 周期的変動
+        # Daily congestion variation patterns
+        time_factor = math.sin(turn * 0.1) * 0.2  # Periodic variation
         self.congestion = max(0.0, min(1.0, 0.5 + time_factor + noise))
     
     def get_available_slots(self) -> int:
-        """チャネル状況に基づくスロット数決定"""
+        """Determine slot count based on channel conditions"""
         base_slots = 3
         
-        # 品質による増減（0-2スロットのボーナス）
+        # Quality-based increase/decrease (0-2 slot bonus)
         quality_bonus = int(self.quality * 2)
         
-        # 混雑による減少（0-2スロットのペナルティ）
+        # Congestion-based reduction (0-2 slot penalty)
         congestion_penalty = int(self.congestion * 2)
         
-        # ノイズによるランダム変動
+        # Noise-based random variation
         noise_variation = random.randint(-1, 1) if self.noise_level > 0.7 else 0
         
         total_slots = base_slots + quality_bonus - congestion_penalty + noise_variation
-        return max(1, min(6, total_slots))  # 1-6スロットの範囲制限
+        return max(1, min(6, total_slots))  # Constrained to 1-6 slots
 ```
 
-#### 1.2 動的スロット配分
-- **最小保証**: 1スロット（システム継続性）
-- **最大制限**: 6スロット（計算複雑性管理）
-- **確率分布**: 2-4スロットが70%、1,5,6スロットが30%
+#### 1.2 Dynamic Slot Allocation
+- **Minimum guarantee**: 1 slot (system continuity)
+- **Maximum limit**: 6 slots (computational complexity management)
+- **Probability distribution**: 70% for 2-4 slots, 30% for 1,5,6 slots
 
-### 2. 将来予測システム
+### 2. Future Prediction System
 
-#### 2.1 予測情報の種類
+#### 2.1 Types of Prediction Information
 ```python
 class FuturePrediction:
-    """将来状況の予測情報"""
+    """Future situation prediction information"""
     
     def __init__(self, horizon: int = 3):
-        self.horizon = horizon  # 予測範囲（ターン数）
-        self.slot_predictions = []    # スロット数予測
-        self.confidence_levels = []   # 予測信頼度
-        self.trend_analysis = ""      # トレンド分析
+        self.horizon = horizon  # Prediction range (number of turns)
+        self.slot_predictions = []    # Slot count predictions
+        self.confidence_levels = []   # Prediction confidence
+        self.trend_analysis = ""      # Trend analysis
     
     def generate_predictions(self, current_channel: ChannelCondition):
-        """現在状況から将来予測を生成"""
+        """Generate future predictions from current situation"""
         predictions = []
         
         for t in range(1, self.horizon + 1):
-            # マルコフ連鎖による確率的予測
+            # Probabilistic prediction using Markov chain
             prob_dist = self._calculate_slot_probabilities(current_channel, t)
             predictions.append({
                 'turn': t,
@@ -94,116 +94,116 @@ class FuturePrediction:
         return predictions
     
     def _calculate_slot_probabilities(self, channel, turns_ahead):
-        """指定ターン後のスロット数確率分布"""
-        # 現在品質からの確率的遷移
+        """Probability distribution of slot counts for specified turns ahead"""
+        # Probabilistic transition from current quality
         base_quality = channel.quality
-        uncertainty = 0.1 * turns_ahead  # 時間とともに不確実性増加
+        uncertainty = 0.1 * turns_ahead  # Uncertainty increases with time
         
         probabilities = {}
         for slots in range(1, 7):
-            # 品質ベースの確率計算
-            optimal_quality = (slots - 1) / 5.0  # スロット数に対応する理想品質
+            # Quality-based probability calculation
+            optimal_quality = (slots - 1) / 5.0  # Ideal quality corresponding to slot count
             distance = abs(base_quality - optimal_quality)
             prob = math.exp(-distance / uncertainty)
             probabilities[slots] = prob
         
-        # 正規化
+        # Normalization
         total = sum(probabilities.values())
         return {k: v/total for k, v in probabilities.items()}
 ```
 
-#### 2.2 LLMへの予測情報提示
+#### 2.2 Prediction Information Presentation to LLM
 ```
-=== 将来予測情報 ===
+=== FUTURE PREDICTION INFORMATION ===
 
-現在チャネル状況:
-  品質: 0.75 (良好)
-  混雑: 0.40 (中程度)
-  利用可能スロット: 4
+Current Channel Status:
+  Quality: 0.75 (Good)
+  Congestion: 0.40 (Moderate)
+  Available Slots: 4
 
-次ターン予測 (信頼度: 85%):
-  2スロット: 15%
-  3スロット: 40%
-  4スロット: 35%
-  5スロット: 10%
+Next Turn Prediction (Confidence: 85%):
+  2 slots: 15%
+  3 slots: 40%
+  4 slots: 35%
+  5 slots: 10%
 
-2ターン後予測 (信頼度: 65%):
-  1スロット: 10%
-  2スロット: 25%
-  3スロット: 35%
-  4スロット: 25%
-  5スロット: 5%
+2 Turns Ahead Prediction (Confidence: 65%):
+  1 slot: 10%
+  2 slots: 25%
+  3 slots: 35%
+  4 slots: 25%
+  5 slots: 5%
 
-チャネルトレンド: 品質低下傾向、混雑増加予想
+Channel Trend: Quality declining, congestion increasing
 ```
 
-### 3. 段階的実装プラン
+### 3. Phased Implementation Plan
 
-#### フェーズ1: シンプル可変スロット ✅ **完了済み** (2024年8月)
-**目標**: 基本的な可変性の導入
+#### Phase 1: Simple Variable Slots ✅ **COMPLETED** (August 2024)
+**Goal**: Introduction of basic variability
 ```python
-# 実装済み項目
-1. SlotManagerクラス実装 ✓
-2. VariableSlotSchedulerクラス作成 ✓  
-3. 可変スロット対応のLLMプロンプト実装 ✓
-4. 1ターン先読み予測機能 ✓
-5. カスタム確率分布対応 ✓
+# Completed Items
+1. SlotManager class implementation ✓
+2. VariableSlotScheduler class creation ✓  
+3. Variable slot-compatible LLM prompt implementation ✓
+4. 1-turn lookahead prediction feature ✓
+5. Custom probability distribution support ✓
 
-# 実装ファイル
-- variable_slot_scheduler.py (完成)
-- SlotManager: 確率ベースのスロット管理
-- VariableSlotScheduler: LLMDirectSchedulerを継承
+# Implementation Files
+- variable_slot_scheduler.py (Complete)
+- SlotManager: Probability-based slot management
+- VariableSlotScheduler: Inherits from LLMDirectScheduler
 
-# 確認された変化
-- LLMが利用可能スロット数に適応
-- 次ターン予測を活用した戦略的判断
-- "With only 2 slots now and 4 slots next turn..."のような推論
+# Confirmed Changes
+- LLM adapts to available slot counts
+- Strategic decisions using next-turn predictions
+- Reasoning like "With only 2 slots now and 4 slots next turn..."
 ```
 
-#### フェーズ2: 予測システム統合 (実装期間: 2-3日)
-**目標**: 将来情報を考慮した判断
+#### Phase 2: Prediction System Integration (Implementation period: 2-3 days)
+**Goal**: Decision-making considering future information
 ```python
-# 実装項目
-1. FuturePredictionクラス完全実装
-2. マルコフ連鎖ベース予測アルゴリズム
-3. 予測情報のLLMプロンプト統合
-4. 時系列データの管理システム
+# Implementation Items
+1. Complete FuturePrediction class implementation
+2. Markov chain-based prediction algorithms
+3. Integration of prediction information into LLM prompts
+4. Time-series data management system
 
-# 期待される変化
-- 戦略的判断の出現（待機vs即座実行）
-- 不確実性への対応パターン
-- リスク管理行動の観察
+# Expected Changes
+- Emergence of strategic decisions (wait vs immediate execution)
+- Response patterns to uncertainty
+- Observation of risk management behaviors
 ```
 
-#### フェーズ3: 高度な戦略分析 (実装期間: 3-4日)
-**目標**: 複雑な時系列推論の評価
+#### Phase 3: Advanced Strategic Analysis (Implementation period: 3-4 days)
+**Goal**: Evaluation of complex temporal reasoning
 ```python
-# 実装項目
-1. 多期間パフォーマンス評価システム
-2. 予測精度と判断品質の相関分析
-3. 複数シナリオ比較機能
-4. 戦略パターン自動検出
+# Implementation Items
+1. Multi-period performance evaluation system
+2. Correlation analysis between prediction accuracy and decision quality
+3. Multi-scenario comparison functionality
+4. Automatic detection of strategy patterns
 
-# 期待される変化
-- 長期最適化戦略の確立
-- 予測情報活用度の定量化
-- 適応学習パターンの発見
+# Expected Changes
+- Establishment of long-term optimization strategies
+- Quantification of prediction information utilization
+- Discovery of adaptive learning patterns
 ```
 
-### 4. 技術実装詳細
+### 4. Technical Implementation Details
 
-#### 4.1 新しいクラス構造
+#### 4.1 New Class Structure
 ```python
-# 拡張後のメインクラス
+# Extended main class
 class AdvancedLLMScheduler(LLMDirectScheduler):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.channel = ChannelCondition()
         self.predictor = FuturePrediction(horizon=3)
-        self.strategy_history = []  # 戦略決定履歴
+        self.strategy_history = []  # Strategy decision history
     
     def get_dynamic_context(self):
-        """動的コンテキスト情報の生成"""
+        """Generate dynamic context information"""
         current_slots = self.channel.get_available_slots()
         predictions = self.predictor.generate_predictions(self.channel)
         return {
@@ -213,121 +213,131 @@ class AdvancedLLMScheduler(LLMDirectScheduler):
         }
 ```
 
-#### 4.2 拡張LLMプロンプト設計
+#### 4.2 Extended LLM Prompt Design
 ```python
 def create_strategic_prompt(self, context):
     return f"""
-=== 戦略的パケット選択タスク ===
+=== Strategic Packet Selection Task ===
 
-現在状況:
-利用可能スロット: {context['current_slots']}
+Current Situation:
+Available Slots: {context['current_slots']}
 {self.format_state_for_llm()}
 
-将来予測:
+Future Predictions:
 {self.format_predictions(context['predictions'])}
 
-戦略的考慮事項:
-1. 現在送信 vs 将来の良条件待ち
-2. 確実性 vs 最適性のトレードオフ
-3. デッドライン制約下でのリスク管理
+Strategic Considerations:
+1. Current transmission vs waiting for better future conditions
+2. Certainty vs optimality trade-off
+3. Risk management under deadline constraints
 
-あなたのタスク:
-現在の{context['current_slots']}スロットで送信するパケットを選択してください。
-将来予測を考慮し、短期・長期両方の観点から最適な判断を行ってください。
+Your Task:
+Select packets for the current {context['current_slots']} slots.
+Consider future predictions and make optimal decisions from both short-term and long-term perspectives.
 
-判断理由に以下を含めてください:
-- なぜこの選択をしたか
-- 将来予測をどう活用したか
-- 代替案と比較した理由
+Include the following in your reasoning:
+- Why you made this choice
+- How you utilized future predictions
+- Comparison with alternative options
 """
 ```
 
-#### 4.3 新しい評価指標
+#### 4.3 New Evaluation Metrics
 ```python
 class AdvancedMetrics:
-    """拡張評価指標"""
+    """Extended evaluation metrics"""
     
     def calculate_adaptation_score(self, decisions, slot_variations):
-        """可変条件への適応度スコア"""
-        # スロット変動に対する判断の柔軟性を評価
+        """Adaptation score to variable conditions"""
+        # Evaluate flexibility of decisions to slot variations
         pass
     
     def calculate_prediction_utilization(self, decisions, predictions):
-        """予測情報活用度スコア"""
-        # 将来予測を実際の判断にどの程度反映したか
+        """Prediction information utilization score"""
+        # How much future predictions were reflected in actual decisions
         pass
     
     def calculate_risk_management_score(self, decisions, uncertainties):
-        """リスク管理品質スコア"""
-        # 不確実性下での判断の妥当性を評価
+        """Risk management quality score"""
+        # Validity of decisions under uncertainty
         pass
     
     def calculate_temporal_optimization(self, multi_turn_performance):
-        """時系列最適化スコア"""
-        # 複数ターンにわたる戦略的判断の効果を評価
+        """Temporal optimization score"""
+        # Effectiveness of strategic decisions across multiple turns
         pass
 ```
 
-### 5. 期待される効果
+### 5. Expected Effects
 
-#### 5.1 LLM行動パターンの進化
-**現在の行動**:
-- 緊急性優先（deadline ≤ 3）
-- オーバーフロー管理
-- 単発価値最大化
+#### 5.1 Evolution of LLM Behavior Patterns
+**Current Behavior**:
+- Deadline priority (deadline ≤ 3)
+- Overflow management
+- Single-shot value maximization
 
-**拡張後の予想行動**:
-- **条件的延期**: 「次ターンの6スロット時まで高価値パケット保持」
-- **リスクヘッジ**: 「不確実性が高いので安全確実な選択を実行」
-- **タイミング最適化**: 「3ターン後の良条件を狙って現在は控えめに」
-- **複合戦略**: 「確実分と投機分のポートフォリオ構築」
+**Expected Post-Extension Behavior**:
+- **Conditional postponement**: "Hold high-value packets until 6-slot turn"
+- **Risk hedging**: "Choose safe and certain options due to high uncertainty"
+- **Timing optimization**: "Aim for good conditions 3 turns ahead, be conservative now"
+- **Composite strategies**: "Build portfolio of certain and speculative portions"
 
-#### 5.2 研究価値
-- **時系列推論能力**: LLMの将来予測活用パターン分析
-- **不確実性処理**: 確率情報に基づく判断品質評価
-- **適応学習**: 動的環境での戦略修正プロセス観察
-- **説明可能性**: 複雑な判断の解釈可能性維持
+#### 5.2 Research Value
+- **Temporal reasoning ability**: Analysis of LLM future prediction utilization patterns
+- **Uncertainty handling**: Evaluation of decision quality based on probabilistic information
+- **Adaptive learning**: Observation of strategy modification processes in dynamic environments
+- **Explainability**: Maintaining interpretability of complex decisions
 
-#### 5.3 技術的挑戦
-**複雑性管理**:
-- LLM理解可能な情報量制限
-- 計算コスト vs 予測精度のバランス
-- リアルタイム処理要件
+#### 5.3 Technical Challenges
+**Complexity Management**:
+- Limits on information amount understandable by LLM
+- Balance between computational cost and prediction accuracy
+- Real-time processing requirements
 
-**評価システム**:
-- 単一指標から多次元評価への移行
-- 長期戦略の短期評価方法
-- 予測精度と判断品質の分離
+**Evaluation Systems**:
+- Transition from single metrics to multi-dimensional evaluation
+- Methods for short-term evaluation of long-term strategies
+- Separation of prediction accuracy and decision quality
 
-## 実装状況
+## Implementation Status
 
-### ✅ 完了項目 (フェーズ1)
-1. **SlotManager実装**: 可変スロット管理完了
-2. **VariableSlotScheduler**: 予測付き可変スロット完了
-3. **LLMプロンプト適応**: 次ターン予測情報統合完了
-4. **動作テスト**: 正常動作確認済み
+### ✅ Completed Items (Phase 1)
+1. **SlotManager implementation**: Variable slot management complete
+2. **VariableSlotScheduler**: Variable slots with prediction complete
+3. **LLM prompt adaptation**: Next-turn prediction information integration complete
+4. **Operation testing**: Normal operation confirmed
 
-### 使用方法
+### Usage
 ```bash
-# デフォルト均等分布 (各25%)
+# Default uniform distribution (25% each)
 uv run variable_slot_scheduler.py
 
-# カスタム分布例
-uv run variable_slot_scheduler.py -p 0.1 0.2 0.5 0.2  # 3スロット中心
-uv run variable_slot_scheduler.py -p 0.4 0.1 0.1 0.4  # 極端な変動
+# Custom distribution examples
+uv run variable_slot_scheduler.py -p 0.1 0.2 0.5 0.2  # 3-slot centered
+uv run variable_slot_scheduler.py -p 0.4 0.1 0.1 0.4  # Extreme variation
 ```
 
-### 段階的発展項目
-1. **予測アルゴリズム実装**: 2-3時間
-2. **戦略分析システム**: 4-5時間
-3. **包括的評価フレームワーク**: 6-8時間
+### Natural Language Strategy Integration
+```bash
+# Strategy instruction examples
+uv run variable_slot_scheduler.py -s "Deadline priority, never let packets expire!"
+uv run llm_direct_scheduler.py -s "High-value packets first, maximize total value"
+uv run variable_slot_scheduler.py -s "Balance all queues, avoid penalties"
+```
 
-## まとめ
+### Gradual Development Items
+1. **Prediction algorithm implementation**: 2-3 hours
+2. **Strategy analysis system**: 4-5 hours
+3. **Comprehensive evaluation framework**: 6-8 hours
 
-この拡張により、パケットゲームシステムは単純なスケジューリングから高度な戦略的AI判断プラットフォームへと発展します。LLMの時系列推論、リスク管理、適応学習能力を総合的に評価できる貴重な研究環境となることが期待されます。
+## Summary
 
-段階的実装により、各フェーズで新しい洞察を得ながら、最終的に非常に興味深いAI行動パターンの観察が可能になるでしょう。
+This extension transforms the packet game system from simple scheduling to an advanced strategic AI decision platform. It provides a valuable research environment for comprehensive evaluation of LLM temporal reasoning, risk management, and adaptive learning capabilities.
+
+Through phased implementation, new insights can be gained at each phase, ultimately enabling observation of highly interesting AI behavior patterns.
+
+The addition of natural language strategy instructions further enhances the system's flexibility and research value, allowing users to guide LLM behavior through intuitive commands while observing how the AI interprets and adapts human intent to system constraints.
 
 ---
-*作成日時: 2025年8月17日*  
-*次回セッション開始時に即座実装可能*
+*Created: August 17, 2025*  
+*Ready for immediate implementation upon next session*
