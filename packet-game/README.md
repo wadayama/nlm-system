@@ -13,6 +13,10 @@ uv run variable_slot_scheduler.py
 
 # Custom probability distribution for slots
 uv run variable_slot_scheduler.py -p 0.1 0.2 0.5 0.2  # Favors 3 slots
+
+# Natural language strategy instructions
+uv run variable_slot_scheduler.py -s "Deadline priority, never let packets expire!"
+uv run llm_direct_scheduler.py -s "High-value packets first, maximize total value"
 ```
 
 The system will:
@@ -27,23 +31,26 @@ The system will:
 - **4 packet queues** with size limit of 5 (overflow penalties apply)
 - **Variable or fixed slots**: 3 fixed slots OR 1-4 variable slots per turn
 - **Future prediction**: LLM sees next turn's slot availability (variable mode)
+- **Natural language strategy**: Custom user instructions guide LLM decisions
 - **Dynamic packet properties**: value (1-10), deadline (5-15)
 - **Real-time adaptation** based on queue states and urgency
 
 ### LLM Decision Process
 Each turn, the LLM:
-1. Observes all queue states with packet details
-2. Sees current and next turn slot availability (variable mode)
-3. Considers urgency levels (🔴 Critical, 🟡 Urgent, 🟢 Normal)
-4. Selects packets matching available slots with clear reasoning
-5. Adapts strategy based on previous outcomes and future predictions
+1. Receives user strategy instruction (if provided)
+2. Observes all queue states with packet details
+3. Sees current and next turn slot availability (variable mode)
+4. Considers urgency levels (🔴 Critical, 🟡 Urgent, 🟢 Normal)
+5. Selects packets following user strategy with clear reasoning
+6. Adapts strategy based on previous outcomes and future predictions
 
 ## Key Features
 
 ### Intelligent Scheduling
-- **Emergent strategies**: LLM develops its own optimization patterns
-- **Multi-objective balance**: Value, deadlines, and queue management
-- **Explanation-driven**: Every decision comes with clear reasoning
+- **User-guided strategies**: Natural language instructions drive LLM decisions
+- **Emergent behaviors**: LLM interprets and adapts user intent to system constraints
+- **Multi-objective balance**: Value, deadlines, queue management, and user priorities
+- **Explanation-driven**: Every decision comes with clear reasoning including strategy adherence
 
 ### Visual Interface
 ```
@@ -136,6 +143,24 @@ uv run variable_slot_scheduler.py  # 25% each for 1,2,3,4 slots
 uv run variable_slot_scheduler.py -p 0.1 0.2 0.5 0.2  # 3-slot heavy
 uv run variable_slot_scheduler.py -p 0.4 0.1 0.1 0.4  # Extreme variance
 uv run variable_slot_scheduler.py -p 0.05 0.45 0.45 0.05  # Stable 2-3 slots
+```
+
+### Natural Language Strategy Examples
+```bash
+# Deadline-focused strategies
+uv run variable_slot_scheduler.py -s "Deadline priority, never let packets expire!"
+uv run llm_direct_scheduler.py -s "Critical deadlines only, prevent all expirations"
+
+# Value-focused strategies  
+uv run variable_slot_scheduler.py -s "High-value packets first, maximize total value"
+uv run llm_direct_scheduler.py -s "Focus on high-value packets only"
+
+# Balance strategies
+uv run variable_slot_scheduler.py -s "Balance all queues, avoid penalties"
+uv run llm_direct_scheduler.py -s "Safe operation, maintain queue balance"
+
+# Custom strategies
+uv run variable_slot_scheduler.py -s "Empty Queue 0 but wait for value 8+ packets"
 ```
 
 ## Performance Metrics

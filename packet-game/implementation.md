@@ -2,7 +2,7 @@
 
 ## Overview
 
-A packet scheduling game where an LLM directly selects packets from 4 queues each turn, without predefined strategies. The system supports both fixed (3 slots) and variable (1-4 slots) scheduling modes. In variable mode, the LLM can see future slot availability for strategic planning.
+A packet scheduling game where an LLM directly selects packets from 4 queues each turn, without predefined strategies. The system supports both fixed (3 slots) and variable (1-4 slots) scheduling modes with natural language strategy instructions. In variable mode, the LLM can see future slot availability for strategic planning.
 
 ## Core Implementation
 
@@ -115,10 +115,19 @@ Next Turn Slots: 4 🔮 (prediction)
 [Strategic considerations based on future slot availability]
 ```
 
+**Strategy Mode Input (Additional):**
+```
+=== USER STRATEGY DIRECTIVE ===
+User instruction: "High-value packets first, maximize total value"
+
+Follow this strategy directive as the highest priority in your decision making.
+Balance the user's intent with system constraints to achieve the best outcome.
+```
+
 **Output from LLM:**
 ```
 - Selected packet IDs: "0-3,1-2,2-1"
-- Reasoning: Explanation including future planning (variable mode)
+- Reasoning: Explanation including strategy adherence and future planning
 ```
 
 #### **Scoring System:**
@@ -186,6 +195,10 @@ uv run variable_slot_scheduler.py
 # Custom slot probabilities
 uv run variable_slot_scheduler.py -p 0.1 0.2 0.5 0.2
 
+# Natural language strategy instructions
+uv run variable_slot_scheduler.py -s "Deadline priority, never let packets expire!"
+uv run llm_direct_scheduler.py -s "High-value packets first, maximize total value"
+
 # Continuous mode (no pauses)
 uv run variable_slot_scheduler.py -c
 ```
@@ -208,7 +221,8 @@ run_variable_slot_simulation(
     max_queue_size=5,
     slot_probabilities=[0.25, 0.25, 0.25, 0.25],  # [p1, p2, p3, p4]
     verbose=True,
-    continuous=False
+    continuous=False,
+    user_strategy="High-value packets first"  # Natural language strategy
 )
 ```
 

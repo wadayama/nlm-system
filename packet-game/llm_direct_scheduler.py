@@ -46,6 +46,9 @@ class LLMDirectScheduler:
         # Selection history
         self.selection_history = []
         self.reasoning_history = []
+        
+        # User strategy (set later if provided)
+        self.user_strategy = None
     
     def add_packet_to_queue(self, queue_index: int, packet: Packet):
         """Add a packet to specified queue."""
@@ -130,9 +133,21 @@ class LLMDirectScheduler:
                 turn_num = self.turn_count - len(recent_selections) + i + 1
                 history_context += f"Turn {turn_num}: {sel} - {reason}\n"
         
+        # Add user strategy section if provided
+        strategy_section = ""
+        if self.user_strategy:
+            strategy_section = f"""
+=== USER STRATEGY DIRECTIVE ===
+User instruction: "{self.user_strategy}"
+
+Follow this strategy directive as the highest priority in your decision making.
+Balance the user's intent with system constraints to achieve the best outcome.
+
+"""
+
         # Create LLM prompt
         prompt = f"""
-=== Packet Selection Task ===
+{strategy_section}=== Packet Selection Task ===
 
 {state_description}{history_context}
 
@@ -140,6 +155,7 @@ Your Task:
 Select exactly {self.num_slots} packets to send this turn.
 
 Guidelines:
+- Follow the user strategy directive above (if provided) as highest priority
 - You can select from any queue
 - Multiple packets from the same queue are allowed
 - Consider: packet values, deadlines, queue overflow risks
@@ -150,7 +166,7 @@ Available packet IDs:
 
 Provide your decision in this format:
 Selected: [packet_id1, packet_id2, packet_id3]
-Reasoning: [Your reasoning in 1-2 sentences]
+Reasoning: [Your reasoning including how you followed the user strategy]
 
 Save your packet selections (comma-separated) to {{selected_packets}}
 Save your reasoning to {{reasoning}}
@@ -165,7 +181,7 @@ Save your reasoning to {{reasoning}}
         selected_ids_str = str(self.session.get("selected_packets") or "").strip()
         reasoning = str(self.session.get("reasoning") or "No reasoning provided").strip()
         
-        print(f"  [DEBUG] LLM selected: '{selected_ids_str}'")
+        # print(f"  [DEBUG] LLM selected: '{selected_ids_str}'")
         
         # Parse selected packet IDs
         selected_packets = []
@@ -311,7 +327,8 @@ Save your reasoning to {{reasoning}}
 
 def run_llm_direct_simulation(num_turns: int = 20, num_queues: int = 4,
                              max_queue_size: int = 5, num_slots: int = 3,
-                             verbose: bool = True, continuous: bool = False) -> Dict:
+                             verbose: bool = True, continuous: bool = False,
+                             user_strategy: str = None) -> Dict:
     """Run simulation with LLM direct packet selection.
     
     Args:
@@ -321,6 +338,7 @@ def run_llm_direct_simulation(num_turns: int = 20, num_queues: int = 4,
         num_slots: Number of packets to select per turn
         verbose: Whether to show detailed output
         continuous: If True, run without pausing between turns
+        user_strategy: Natural language strategy instruction for LLM
         
     Returns:
         Final statistics
@@ -330,10 +348,16 @@ def run_llm_direct_simulation(num_turns: int = 20, num_queues: int = 4,
         print(f"\n🤖 LLM Direct Selection Packet Scheduler ({mode_text})")
         print(f"📦 Selecting {num_slots} packets per turn")
         print(f"📏 Max Queue Size: {max_queue_size} (penalty for exceeding)")
+        if user_strategy:
+            print(f"🎯 User Strategy: \"{user_strategy}\"")
         print("=" * 60)
     
     scheduler = LLMDirectScheduler(num_queues=num_queues, max_queue_size=max_queue_size,
                                   num_slots=num_slots, model="gpt-5-mini")
+    
+    # Set user strategy if provided
+    if user_strategy:
+        scheduler.user_strategy = user_strategy
     
     # Add initial packets - exactly 3 packets per queue for 3-slot system
     if verbose:
@@ -468,12 +492,14 @@ if __name__ == "__main__":
                         help='Number of packet queues (default: 4)')
     parser.add_argument('--max-size', '-m', type=int, default=5,
                         help='Maximum queue size before penalty (default: 5)')
-    parser.add_argument('--slots', '-s', type=int, default=3,
+    parser.add_argument('--slots', type=int, default=3,
                         help='Number of packets to select per turn (default: 3)')
     parser.add_argument('--continuous', '-c', action='store_true',
                         help='Run in continuous mode without pausing between turns')
     parser.add_argument('--quiet', action='store_true',
                         help='Run with minimal output')
+    parser.add_argument('--strategy', '-s', type=str, default=None,
+                        help='Natural language strategy instruction for LLM decision making')
     
     args = parser.parse_args()
     
@@ -484,5 +510,6 @@ if __name__ == "__main__":
         max_queue_size=args.max_size,
         num_slots=args.slots,
         verbose=not args.quiet,
-        continuous=args.continuous
+        continuous=args.continuous,
+        user_strategy=args.strategy
     )

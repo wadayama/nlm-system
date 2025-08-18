@@ -89,6 +89,9 @@ class VariableSlotScheduler(LLMDirectScheduler):
         
         # Override num_slots with current value
         self.num_slots = self.slot_manager.get_current_slots()
+        
+        # User strategy (set later if provided)
+        self.user_strategy = None
     
     def format_state_for_llm(self) -> str:
         """Format current state for LLM presentation with slot predictions."""
@@ -155,9 +158,21 @@ class VariableSlotScheduler(LLMDirectScheduler):
                 turn_num = self.turn_count - len(recent_selections) + i + 1
                 history_context += f"Turn {turn_num}: {sel} - {reason}\n"
         
+        # Add user strategy section if provided
+        strategy_section = ""
+        if self.user_strategy:
+            strategy_section = f"""
+=== USER STRATEGY DIRECTIVE ===
+User instruction: "{self.user_strategy}"
+
+Follow this strategy directive as the highest priority in your decision making.
+Balance the user's intent with system constraints to achieve the best outcome.
+
+"""
+
         # Create LLM prompt with slot prediction emphasis
         prompt = f"""
-=== Variable Slot Packet Selection Task ===
+{strategy_section}=== Variable Slot Packet Selection Task ===
 
 {state_description}{history_context}
 
@@ -171,6 +186,7 @@ Your Task:
 Select exactly {self.num_slots} packets to send this turn.
 
 Guidelines:
+- Follow the user strategy directive above (if provided) as highest priority
 - Balance immediate needs (critical deadlines) with future opportunities
 - Consider the slot availability trend in your strategy
 - Maximize total value while minimizing penalties
@@ -181,7 +197,7 @@ Available packet IDs:
 
 Provide your decision in this format:
 Selected: [packet_id1, packet_id2, ...]
-Reasoning: [Your reasoning including how you used the slot prediction]
+Reasoning: [Your reasoning including how you followed the user strategy and used slot prediction]
 
 Save your packet selections (comma-separated) to {{selected_packets}}
 Save your reasoning to {{reasoning}}
@@ -196,7 +212,7 @@ Save your reasoning to {{reasoning}}
         selected_ids_str = str(self.session.get("selected_packets") or "").strip()
         reasoning = str(self.session.get("reasoning") or "No reasoning provided").strip()
         
-        print(f"  [DEBUG] LLM selected: '{selected_ids_str}'")
+        # print(f"  [DEBUG] LLM selected: '{selected_ids_str}'")
         
         # Parse selected packet IDs
         selected_packets = []
@@ -241,7 +257,8 @@ Save your reasoning to {{reasoning}}
 def run_variable_slot_simulation(num_turns: int = 20, num_queues: int = 4,
                                 max_queue_size: int = 5, 
                                 slot_probabilities: List[float] = None,
-                                verbose: bool = True, continuous: bool = False) -> Dict:
+                                verbose: bool = True, continuous: bool = False,
+                                user_strategy: str = None) -> Dict:
     """Run simulation with variable slot LLM packet selection.
     
     Args:
@@ -251,6 +268,7 @@ def run_variable_slot_simulation(num_turns: int = 20, num_queues: int = 4,
         slot_probabilities: Probabilities for [1, 2, 3, 4] slots
         verbose: Whether to show detailed output
         continuous: If True, run without pausing between turns
+        user_strategy: Natural language strategy instruction for LLM
         
     Returns:
         Final statistics
@@ -263,10 +281,16 @@ def run_variable_slot_simulation(num_turns: int = 20, num_queues: int = 4,
         else:
             print(f"📊 Slot Distribution: Uniform (25% each)")
         print(f"📏 Max Queue Size: {max_queue_size} (penalty for exceeding)")
+        if user_strategy:
+            print(f"🎯 User Strategy: \"{user_strategy}\"")
         print("=" * 60)
     
     scheduler = VariableSlotScheduler(num_queues=num_queues, max_queue_size=max_queue_size,
                                      slot_probabilities=slot_probabilities, model="gpt-5-mini")
+    
+    # Set user strategy if provided
+    if user_strategy:
+        scheduler.user_strategy = user_strategy
     
     # Add initial packets - 3 packets per queue
     if verbose:
@@ -424,6 +448,8 @@ if __name__ == "__main__":
                         help='Run in continuous mode without pausing between turns')
     parser.add_argument('--quiet', action='store_true',
                         help='Run with minimal output')
+    parser.add_argument('--strategy', '-s', type=str, default=None,
+                        help='Natural language strategy instruction for LLM decision making')
     
     args = parser.parse_args()
     
@@ -440,5 +466,6 @@ if __name__ == "__main__":
         max_queue_size=args.max_size,
         slot_probabilities=args.probabilities,
         verbose=not args.quiet,
-        continuous=args.continuous
+        continuous=args.continuous,
+        user_strategy=args.strategy
     )
