@@ -79,3 +79,4 @@ openai_key
 model_cache/
 
 # Work in progress (not ready for public)
+# packet-game/ (now ready for commit)
