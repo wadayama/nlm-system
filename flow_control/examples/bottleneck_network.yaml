@@ -1,0 +1,28 @@
+name: Bottleneck Network
+description: Network with severe central bottleneck
+
+nodes:
+  s: source
+  a: intermediate
+  b: intermediate
+  c: intermediate
+  d: intermediate
+  e: intermediate
+  t: sink
+
+edges:
+  # Wide input
+  e0: {from: s, to: a, capacity: 15.0}
+  e1: {from: s, to: b, capacity: 12.0}
+  
+  # Converge to bottleneck
+  e2: {from: a, to: c, capacity: 3.0}
+  e3: {from: b, to: c, capacity: 3.0}
+  
+  # Severe bottleneck
+  e4: {from: c, to: d, capacity: 2.0}
+  e5: {from: c, to: e, capacity: 2.0}
+  
+  # Wide output
+  e6: {from: d, to: t, capacity: 10.0}
+  e7: {from: e, to: t, capacity: 8.0}

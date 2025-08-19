@@ -1,0 +1,25 @@
+name: Complex Multi-Path
+description: Network with 4 overlapping paths and shared edges
+
+nodes:
+  s: source
+  a: intermediate
+  b: intermediate
+  c: intermediate
+  d: intermediate
+  t: sink
+
+edges:
+  # From source
+  e0: {from: s, to: a, capacity: 12.0}
+  e1: {from: s, to: b, capacity: 10.0}
+  
+  # Middle layer
+  e2: {from: a, to: c, capacity: 8.0}
+  e3: {from: a, to: d, capacity: 9.0}
+  e4: {from: b, to: c, capacity: 7.0}
+  e5: {from: b, to: d, capacity: 11.0}
+  
+  # To sink
+  e6: {from: c, to: t, capacity: 15.0}
+  e7: {from: d, to: t, capacity: 13.0}

@@ -1,0 +1,40 @@
+name: Grid 3x3
+description: 3x3 grid topology with multiple paths
+
+nodes:
+  s: source
+  v00: intermediate
+  v01: intermediate
+  v02: intermediate
+  v10: intermediate
+  v11: intermediate
+  v12: intermediate
+  v20: intermediate
+  v21: intermediate
+  t: sink
+
+edges:
+  # Horizontal edges - row 0
+  e00: {from: s, to: v00, capacity: 10.0}
+  e01: {from: v00, to: v01, capacity: 8.0}
+  e02: {from: v01, to: v02, capacity: 9.0}
+  
+  # Horizontal edges - row 1
+  e10: {from: v02, to: v10, capacity: 7.0}
+  e11: {from: v10, to: v11, capacity: 11.0}
+  e12: {from: v11, to: v12, capacity: 10.0}
+  
+  # Horizontal edges - row 2
+  e20: {from: v12, to: v20, capacity: 8.0}
+  e21: {from: v20, to: v21, capacity: 9.0}
+  e22: {from: v21, to: t, capacity: 12.0}
+  
+  # Vertical edges - column 0
+  e30: {from: s, to: v10, capacity: 9.0}
+  e31: {from: v00, to: v11, capacity: 6.0}
+  e32: {from: v01, to: v12, capacity: 7.0}
+  
+  # Vertical edges - column 1
+  e40: {from: v02, to: v20, capacity: 8.0}
+  e41: {from: v10, to: v21, capacity: 9.0}
+  e42: {from: v11, to: t, capacity: 10.0}

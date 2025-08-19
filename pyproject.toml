@@ -4,9 +4,12 @@ version = "0.1.0"
 description = "Natural Language Macro System"
 requires-python = ">=3.13"
 dependencies = [
+    "matplotlib>=3.10.5",
+    "networkx>=3.5",
     "openai>=1.99.5",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
+    "pyyaml>=6.0.2",
     "requests>=2.32.4",
 ]
 

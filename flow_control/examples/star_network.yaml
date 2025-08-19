@@ -1,0 +1,27 @@
+name: Star Network
+description: Hub-and-spoke topology with central bottleneck
+
+nodes:
+  s: source
+  hub: intermediate
+  spoke1: intermediate
+  spoke2: intermediate
+  spoke3: intermediate
+  spoke4: intermediate
+  t: sink
+
+edges:
+  # From source to hub
+  e0: {from: s, to: hub, capacity: 50.0}
+  
+  # Hub to spokes
+  e1: {from: hub, to: spoke1, capacity: 15.0}
+  e2: {from: hub, to: spoke2, capacity: 12.0}
+  e3: {from: hub, to: spoke3, capacity: 18.0}
+  e4: {from: hub, to: spoke4, capacity: 10.0}
+  
+  # Spokes to sink
+  e5: {from: spoke1, to: t, capacity: 14.0}
+  e6: {from: spoke2, to: t, capacity: 11.0}
+  e7: {from: spoke3, to: t, capacity: 16.0}
+  e8: {from: spoke4, to: t, capacity: 9.0}

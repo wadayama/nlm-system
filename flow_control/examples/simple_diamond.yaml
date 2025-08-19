@@ -1,0 +1,14 @@
+name: Simple Diamond
+description: Basic 2-path diamond topology
+
+nodes:
+  s: source
+  a: intermediate
+  b: intermediate
+  t: sink
+
+edges:
+  e1: {from: s, to: a, capacity: 10.0}
+  e2: {from: s, to: b, capacity: 8.0}
+  e3: {from: a, to: t, capacity: 7.0}
+  e4: {from: b, to: t, capacity: 9.0}
