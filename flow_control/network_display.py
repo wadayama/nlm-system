@@ -9,7 +9,6 @@ throughput, alerts, and path information.
 from typing import Dict, List, Optional
 from network_model import NetworkState, NetworkPath, NetworkEdge
 from flow_operations import FlowController
-import time
 
 
 class NetworkCUIDisplay:
@@ -69,7 +68,6 @@ class NetworkCUIDisplay:
         print(f"\n⚡ Performance Metrics:")
         print(f"   Total Throughput: {throughput:.2f}")
         print(f"   Flow Violations: {len(violations)}")
-        print(f"   Total Violations: {network.violation_count}")
     
     def _display_throughput_summary(self, network: NetworkState):
         """Display throughput summary"""

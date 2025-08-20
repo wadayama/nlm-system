@@ -493,7 +493,6 @@ class FlowController:
             'theoretical_max_flow': max_flow_value,
             'network_efficiency': (total_throughput / max_flow_value) if max_flow_value > 0 else 0.0,
             'flow_conservation_violations': len(violations),
-            'total_violations_count': self.network.violation_count,
             'operational_edges': len([e for e in self.network.edges.values() if not e.is_failed]),
             'failed_edges': len([e for e in self.network.edges.values() if e.is_failed]),
             'blocked_paths': len([p for p_id, p in state['paths'].items() if p['is_blocked']])

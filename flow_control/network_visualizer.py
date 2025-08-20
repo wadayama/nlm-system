@@ -13,7 +13,6 @@ import networkx as nx
 import numpy as np
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
-import time
 
 from network_model import NetworkState, NetworkNode, NetworkEdge
 
@@ -57,10 +56,7 @@ class NetworkVisualizer:
         self.graph = None
         self.pos = None
         
-        # Performance tracking
-        self.throughput_history: List[float] = []
-        self.alert_count_history: List[int] = []
-        self.timestep_history: List[int] = []
+        # Performance tracking removed - static network only
         
         # Current network state
         self.current_network: Optional[NetworkState] = None
@@ -86,7 +82,7 @@ class NetworkVisualizer:
         # [1,0]: Flow distribution   [1,1]: System status
         
         self.axes[0,0].set_title('Network Topology')
-        self.axes[0,1].set_title('Performance History')
+        self.axes[0,1].set_title('Performance Metrics')
         self.axes[1,0].set_title('Flow Distribution')
         self.axes[1,1].set_title('System Status')
         
@@ -203,19 +199,16 @@ class NetworkVisualizer:
         
         # Update each subplot
         self._draw_network_topology(network)
-        self._draw_performance_history(network)
+        self._draw_performance_metrics(network)
         self._draw_flow_distribution(network)
         self._draw_alert_dashboard(network)
-        
-        # Update performance history
-        self._update_performance_tracking(network)
         
         self.fig.canvas.draw()
     
     def _draw_network_topology(self, network: NetworkState):
         """Draw the network topology with current state"""
         ax = self.axes[0,0]
-        ax.set_title(f'Network Topology (t={network.timestep})')
+        ax.set_title('Network Topology')
         
         if not self.graph or not self.pos:
             ax.text(0.5, 0.5, 'No network topology available', 
@@ -309,46 +302,42 @@ class NetworkVisualizer:
         ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.15), 
                  ncol=3, fontsize=8, frameon=True, fancybox=True, shadow=True)
     
-    def _draw_performance_history(self, network: NetworkState):
-        """Draw performance metrics history"""
+    def _draw_performance_metrics(self, network: NetworkState):
+        """Draw current performance metrics (static view)"""
         ax = self.axes[0,1]
-        ax.set_title('Performance History')
+        ax.set_title('Performance Metrics')
         
-        if len(self.throughput_history) < 2:
-            ax.text(0.5, 0.5, 'Collecting performance data...', 
-                   ha='center', va='center', transform=ax.transAxes)
-            return
+        # Calculate current metrics
+        throughput = network.calculate_total_throughput()
+        operational_edges = len([e for e in network.edges.values() if not e.is_failed])
+        active_paths = len([p for p in network.paths.values() if p.current_flow > 0])
         
-        # Plot throughput history
-        ax2 = ax.twinx()
+        # Calculate max flow if available
+        max_flow_text = ""
+        try:
+            from maxflow_calculator import MaxFlowCalculator
+            calc = MaxFlowCalculator(network)
+            max_flow, _ = calc.calculate_max_flow()
+            utilization = (throughput / max_flow * 100) if max_flow > 0 else 0
+            max_flow_text = f"\nTheoretical Max Flow: {max_flow:.2f}\nUtilization: {utilization:.1f}%"
+        except:
+            pass
         
-        line1 = ax.plot(self.timestep_history, self.throughput_history, 
-                       color=self.config.flow_color, linewidth=2, 
-                       marker='o', markersize=4, label='Throughput')
+        # Display current metrics as text
+        metrics_text = f"""Current Performance Metrics
+
+Total Throughput: {throughput:.2f}{max_flow_text}
+
+Network Status:
+• Operational Edges: {operational_edges}/{len(network.edges)}
+• Active Paths: {active_paths}/{len(network.paths)}
+• Failed Edges: {len([e for e in network.edges.values() if e.is_failed])}
+        """
         
-        line2 = ax2.plot(self.timestep_history, self.alert_count_history, 
-                        color=self.config.overload_edge_color, linewidth=2, 
-                        marker='s', markersize=4, label='Violations')
-        
-        ax.set_xlabel('Timestep')
-        ax.set_ylabel('Throughput', color=self.config.flow_color)
-        ax2.set_ylabel('Violation Count', color=self.config.overload_edge_color)
-        
-        # Set appropriate axis ranges
-        if self.alert_count_history:
-            max_alerts = max(self.alert_count_history)
-            # Set alert count y-axis to show clear integer values
-            ax2.set_ylim(-0.1, max(5, max_alerts + 1))
-            ax2.yaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=6))
-        
-        # Combined legend
-        lines = line1 + line2
-        labels = [l.get_label() for l in lines]
-        ax.legend(lines, labels, loc='upper left')
-        
-        ax.grid(True, alpha=0.3)
-        ax.tick_params(axis='y', labelcolor=self.config.flow_color)
-        ax2.tick_params(axis='y', labelcolor=self.config.overload_edge_color)
+        ax.text(0.1, 0.5, metrics_text, 
+               ha='left', va='center', fontsize=11,
+               transform=ax.transAxes)
+        ax.axis('off')
     
     def _draw_flow_distribution(self, network: NetworkState):
         """Draw current flow distribution across paths"""
@@ -400,8 +389,7 @@ class NetworkVisualizer:
         
         # System summary
         summary_text = f"""SYSTEM STATUS
-Total Throughput: {network.total_flow:.2f}
-Total Violations: {network.violation_count}"""
+Total Throughput: {network.total_flow:.2f}"""
         
         ax.text(0.05, 0.95, summary_text, transform=ax.transAxes, 
                verticalalignment='top', fontsize=10, fontweight='bold')
@@ -465,18 +453,6 @@ Violations: {len(conservation_violations)} | Overloads: {overload_count} | Failu
                verticalalignment='top', fontsize=8, 
                bbox=dict(boxstyle='round,pad=0.3', facecolor='lightgray', alpha=0.3))
     
-    def _update_performance_tracking(self, network: NetworkState):
-        """Update performance tracking history"""
-        self.timestep_history.append(network.timestep)
-        self.throughput_history.append(network.total_flow)
-        self.alert_count_history.append(len(network.alerts))
-        
-        # Limit history length
-        max_points = self.config.max_history_points
-        if len(self.timestep_history) > max_points:
-            self.timestep_history = self.timestep_history[-max_points:]
-            self.throughput_history = self.throughput_history[-max_points:]
-            self.alert_count_history = self.alert_count_history[-max_points:]
     
     def save_snapshot(self, filename: str):
         """Save current visualization as image"""

@@ -6,8 +6,6 @@ Core data structures for representing network topology, flow states, and capacit
 in the s-t flow control problem with random capacity variations.
 """
 
-import random
-import math
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
 
@@ -85,9 +83,6 @@ class NetworkEdge:
         self.flow = 0.0  # Current flow f_e(t)
         self.base_capacity = initial_capacity  # Original capacity for recovery
         self.is_failed = False  # True if capacity = 0 due to failure
-        
-        # Parameters for capacity dynamics (simplified model)
-        self.random_walk_std = 0.1  # UNUSED: Standard deviation for random walk (removed)
     
     
     
@@ -229,9 +224,7 @@ class NetworkState:
         self.source_node: Optional[str] = None
         self.sink_node: Optional[str] = None
         
-        # Performance tracking
-        self.total_throughput_history: List[float] = []
-        self.violation_count = 0
+        # Performance tracking (removed unused history tracking)
     
     def add_node(self, node: NetworkNode):
         """Add a node to the network"""
