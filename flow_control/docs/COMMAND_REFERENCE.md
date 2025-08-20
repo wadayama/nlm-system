@@ -1,41 +1,41 @@
 # Command Reference
 
-Flow Control Network Systemのインタラクティブモニターで使用可能なコマンドの完全リファレンスです。
+Complete reference for all commands available in the Flow Control Network System interactive monitor.
 
-## 目次
+## Table of Contents
 
-- [表示コマンド](#表示コマンド)
-- [制御コマンド](#制御コマンド) ⭐ 新機能追加
-- [情報コマンド](#情報コマンド) ⭐ NEW
-- [エッジ操作](#エッジ操作)
-- [サンプル管理](#サンプル管理)
-- [ファイル操作](#ファイル操作) ⭐ NEW
-- [可視化コマンド](#可視化コマンド)
-- [システムコマンド](#システムコマンド)
-- [CLI機能](#CLI機能) ⭐ NEW
+- [Display Commands](#display-commands)
+- [Flow Control Commands](#flow-control-commands) ⭐ Enhanced
+- [Information Commands](#information-commands) ⭐ NEW
+- [Edge Operations](#edge-operations)
+- [Sample Management](#sample-management)
+- [File Operations](#file-operations) ⭐ NEW
+- [Visualization Commands](#visualization-commands)
+- [System Commands](#system-commands)
+- [CLI Features](#cli-features) ⭐ NEW
 
 ---
 
-## 表示コマンド
+## Display Commands
 
-ネットワークの状態を表示するコマンド群です。
+Command group for displaying network status and information.
 
 ### `status` / `s`
 
-ネットワークの完全な状態を表示します。
+Displays complete network status.
 
-**表示内容:**
-- システム概要（ノード数、エッジ数、パス数）
-- スループットサマリー
-- パス詳細（フロー、容量、利用率）
-- エッジ状態
+**Display Content:**
+- System overview (node count, edge count, path count)
+- Throughput summary
+- Path details (flow, capacity, utilization)
+- Edge status
 
-**使用例:**
+**Usage:**
 ```
 flow_control> status
 ```
 
-**出力例:**
+**Example Output:**
 ```
 📊 System Overview
    Nodes: 4 | Edges: 4 | Paths: 2
@@ -49,48 +49,48 @@ P2       e1→e3        4.0     6.0       66.7%        🟢 NORMAL
 
 ### `compact` / `c`
 
-コンパクトな1行状態表示をします。
+Displays compact one-line status.
 
-**使用例:**
+**Usage:**
 ```
 flow_control> compact
 ```
 
-**出力例:**
+**Example Output:**
 ```
 Throughput:   9.0 | P1:63% P2:67%
 ```
 
 ### `observe` / `o`
 
-ネットワークの完全な観測可能状態を詳細表示します。
+Displays complete observable network state with detailed information.
 
-**表示内容:**
-- システムメトリクス（効率、理論最大フロー）
-- 全エッジの詳細状態
-- 全パスの詳細状態
-- ボトルネック情報
+**Display Content:**
+- System metrics (efficiency, theoretical max flow)
+- Detailed status of all edges
+- Detailed status of all paths
+- Bottleneck information
 
-**使用例:**
+**Usage:**
 ```
 flow_control> observe
 ```
 
 ---
 
-## 制御コマンド
+## Flow Control Commands
 
-パスフローを制御するコマンド群です。
+Command group for controlling path flows.
 
 ### `set <path> <flow>`
 
-指定パスのフローを絶対値で設定します。
+Sets the flow of a specified path to an absolute value.
 
-**引数:**
-- `path`: パスID（P1, P2等）
-- `flow`: 設定するフロー値（小数可）
+**Arguments:**
+- `path`: Path ID (P1, P2, etc.)
+- `flow`: Flow value to set (decimal allowed)
 
-**使用例:**
+**Usage:**
 ```
 flow_control> set P1 6.0
 ✅ Updated path P1 flow by 1.00
@@ -101,13 +101,13 @@ flow_control> set P2 10.0
 
 ### `adjust <path> <delta>`
 
-パスのフローを相対値で調整します。
+Adjusts path flow by a relative amount.
 
-**引数:**
-- `path`: パスID
-- `delta`: 変化量（+で増加、-で減少）
+**Arguments:**
+- `path`: Path ID
+- `delta`: Change amount (+ for increase, - for decrease)
 
-**使用例:**
+**Usage:**
 ```
 flow_control> adjust P1 +2.0
 ✅ Updated path P1 flow by 2.00
@@ -118,9 +118,9 @@ flow_control> adjust P2 -1.5
 
 ### `clear`
 
-全てのフローをゼロにリセットします。
+Resets all flows to zero.
 
-**使用例:**
+**Usage:**
 ```
 flow_control> clear
 ✅ All flows cleared to zero
@@ -128,55 +128,55 @@ flow_control> clear
 
 ### `saturate <path>` ⭐ NEW
 
-指定パスを自動的にボトルネック容量まで飽和させます。
+Automatically saturates the specified path to its bottleneck capacity.
 
-**引数:**
-- `path`: パスID（大文字小文字区別なし: P1, p1）
+**Arguments:**
+- `path`: Path ID (case insensitive: P1, p1)
 
-**機能:**
-- パスのボトルネックエッジを自動検出
-- 現在フローからボトルネック容量まで一気に設定
-- 既に飽和済みの場合は適切にメッセージ表示
+**Features:**
+- Automatic bottleneck edge detection
+- Sets flow from current value to bottleneck capacity in one command
+- Appropriate messaging when already saturated
 
-**使用例:**
+**Usage:**
 ```
 flow_control> saturate P1
 ✅ Path P1 saturated: 0.0 → 7.0 (bottleneck: e2)
 
-flow_control> saturate p2  # 小文字でも動作
+flow_control> saturate p2  # lowercase also works
 ✅ Path P2 saturated: 2.0 → 6.0 (bottleneck: e1)
 
-flow_control> saturate P1  # 既に飽和済み
+flow_control> saturate P1  # already saturated
 ✅ Path P1 already saturated at 7.0 (bottleneck: e2)
 ```
 
 ### `distribute <total>`
 
-指定した総フローを全パスに均等分配します。
+Distributes the specified total flow equally among all paths.
 
-**引数:**
-- `total`: 分配する総フロー量
+**Arguments:**
+- `total`: Total flow amount to distribute
 
-**使用例:**
+**Usage:**
 ```
 flow_control> distribute 12.0
 ✅ Successfully distributed 12.00 flow equally among 2 paths
-# 各パスに6.0ずつ分配される
+# Distributes 6.0 to each path
 ```
 
 ### `maxflow <path>`
 
-指定パスの最大安全フローと詳細情報を表示します。
+Displays maximum safe flow and detailed information for the specified path.
 
-**引数:**
-- `path`: パスID
+**Arguments:**
+- `path`: Path ID
 
-**使用例:**
+**Usage:**
 ```
 flow_control> maxflow P1
 ```
 
-**出力例:**
+**Example Output:**
 ```
 📊 Path Flow Analysis: P1
 ──────────────────────────────────────────────────
@@ -200,18 +200,18 @@ flow_control> maxflow P1
 
 ---
 
-## エッジ操作
+## Edge Operations
 
-エッジの有効/無効を制御するコマンド群です。
+Command group for controlling edge enable/disable status.
 
 ### `disable <edge>`
 
-エッジを無効化します（容量を0に設定）。影響を受けるパスのフローは自動的にクリアされます。
+Disables an edge (sets capacity to 0). Flows on affected paths are automatically cleared.
 
-**引数:**
-- `edge`: エッジID（e1, e2等）
+**Arguments:**
+- `edge`: Edge ID (e1, e2, etc.)
 
-**使用例:**
+**Usage:**
 ```
 flow_control> disable e1
 ✅ Edge e1 disabled (cleared flows: P2)
@@ -219,12 +219,12 @@ flow_control> disable e1
 
 ### `enable <edge>`
 
-無効化されたエッジを有効化します（元の容量に復元）。
+Enables a disabled edge (restores original capacity).
 
-**引数:**
-- `edge`: エッジID
+**Arguments:**
+- `edge`: Edge ID
 
-**使用例:**
+**Usage:**
 ```
 flow_control> enable e1
 ✅ Edge e1 enabled (capacity: 6.0)
@@ -232,14 +232,14 @@ flow_control> enable e1
 
 ### `edges`
 
-全エッジの状態を一覧表示します。
+Lists the status of all edges.
 
-**使用例:**
+**Usage:**
 ```
 flow_control> edges
 ```
 
-**出力例:**
+**Example Output:**
 ```
 🔗 EDGE STATUS
 ======================================================================
@@ -255,25 +255,25 @@ e3     b      t      9.0        0.0      0%       🟢 OK
 
 ---
 
-## 情報コマンド ⭐ NEW
+## Information Commands ⭐ NEW
 
-個別のパスやエッジの詳細情報を取得するコマンド群です。
+Command group for getting detailed information about individual paths and edges.
 
 ### `info path <path_id>`
 
-指定パスの包括的な情報を表示します。
+Displays comprehensive information about the specified path.
 
-**引数:**
-- `path_id`: パスID（大文字小文字区別なし: P1, p1）
+**Arguments:**
+- `path_id`: Path ID (case insensitive: P1, p1)
 
-**表示内容:**
-- 基本情報（ルート、エッジ構成、状態）
-- フロー情報（現在フロー、最大容量、利用率）
-- ボトルネック分析（制限エッジと容量）
-- エッジ詳細（各エッジの利用状況）
-- 関連性（他パスとの共有エッジ）
+**Display Content:**
+- Basic information (route, edge composition, status)
+- Flow information (current flow, max capacity, utilization)
+- Bottleneck analysis (limiting edge and capacity)
+- Edge details (utilization status of each edge)
+- Relationships (shared edges with other paths)
 
-**使用例:**
+**Usage:**
 ```
 flow_control> info path P1
 📊 PATH INFORMATION: P1
@@ -304,18 +304,18 @@ e2     a      t      7.0        5.0      71%      🔴 YES
 
 ### `info edge <edge_id>`
 
-指定エッジの詳細情報を表示します。
+Displays detailed information about the specified edge.
 
-**引数:**
-- `edge_id`: エッジID（大文字小文字区別なし: e1, E1）
+**Arguments:**
+- `edge_id`: Edge ID (case insensitive: e1, E1)
 
-**表示内容:**
-- 基本情報（接続ノード、容量、状態）
-- 利用状況（現在フロー、利用率、残余容量）
-- パス利用（このエッジを使用するパス一覧）
-- 重要度（ボトルネックとなるパス、クリティカル判定）
+**Display Content:**
+- Basic information (connected nodes, capacity, status)
+- Utilization status (current flow, utilization, remaining capacity)
+- Path usage (list of paths using this edge)
+- Importance (bottleneck paths, criticality assessment)
 
-**使用例:**
+**Usage:**
 ```
 flow_control> info edge e2
 🔗 EDGE INFORMATION: e2
@@ -341,23 +341,23 @@ P1     5.0      2/2        2
 
 ---
 
-## ファイル操作 ⭐ NEW
+## File Operations ⭐ NEW
 
-外部YAML ファイルからカスタムネットワークを読み込むコマンド群です。
+Command group for loading custom networks from external YAML files.
 
 ### `loadfile <path>`
 
-YAML ファイルからネットワークを読み込みます。
+Loads a network from a YAML file.
 
-**引数:**
-- `path`: YAMLファイルのパス
+**Arguments:**
+- `path`: Path to the YAML file
 
-**機能:**
-- 完全なバリデーション（ノード、エッジ、接続性チェック）
-- 自動パス列挙（全s-t パス検出）
-- ネットワーク情報表示
+**Features:**
+- Complete validation (nodes, edges, connectivity check)
+- Automatic path enumeration (all s-t path detection)
+- Network information display
 
-**使用例:**
+**Usage:**
 ```
 flow_control> loadfile examples/star_network.yaml
 ✅ Loaded: Star Network
@@ -372,18 +372,18 @@ flow_control> loadfile invalid.yaml
 ❌ Invalid network definition: No paths found from source to sink - network is disconnected
 ```
 
-### YAML ファイル形式
+### YAML File Format
 
-**基本構造:**
+**Basic Structure:**
 ```yaml
-name: カスタムネットワーク
-description: ネットワークの説明
+name: Custom Network
+description: Network description
 
 nodes:
-  s: source      # 単一のソースノード（必須）
-  a: intermediate # 中間ノード
+  s: source      # Single source node (required)
+  a: intermediate # Intermediate node
   b: intermediate
-  t: sink        # 単一のシンクノード（必須）
+  t: sink        # Single sink node (required)
 
 edges:
   e1: {from: s, to: a, capacity: 10.0}
@@ -392,31 +392,31 @@ edges:
   e4: {from: b, to: t, capacity: 9.0}
 ```
 
-**ノードタイプ:**
-- `source`: ソースノード（1つのみ）
-- `intermediate`: 中間ノード（任意個数）
-- `sink`: シンクノード（1つのみ）
+**Node Types:**
+- `source`: Source node (exactly one required)
+- `intermediate`: Intermediate nodes (any number)
+- `sink`: Sink node (exactly one required)
 
-**エッジ形式:**
-- `from`/`to`: ノードID（nodes セクションに存在必須）
-- `capacity`: エッジ容量（正の数値）
+**Edge Format:**
+- `from`/`to`: Node IDs (must exist in nodes section)
+- `capacity`: Edge capacity (positive number)
 
 ---
 
-## サンプル管理
+## Sample Management
 
-事前定義されたネットワークサンプルを管理するコマンド群です。
+Command group for managing predefined network samples.
 
 ### `samples`
 
-利用可能な全サンプルネットワークを一覧表示します。
+Lists all available sample networks.
 
-**使用例:**
+**Usage:**
 ```
 flow_control> samples
 ```
 
-**出力例:**
+**Example Output:**
 ```
 🏛️  AVAILABLE NETWORK SAMPLES
 ======================================================================
@@ -431,7 +431,7 @@ flow_control> samples
    Size: 6 nodes, 8 edges, 4 paths
    Features: 4 paths, Shared edges, Flow interaction analysis
 
-[他のサンプル...]
+[Other samples...]
 
 💡 Current sample: DIAMOND
 💡 Use 'load <sample_name>' to switch networks
@@ -439,33 +439,32 @@ flow_control> samples
 
 ### `load <name>`
 
-指定したサンプルネットワークを読み込みます。
+Loads the specified sample network.
 
-**引数:**
-- `name`: サンプルID（diamond, complex, grid, star, layered, linear, parallel, bottleneck）
+**Arguments:**
+- `name`: Sample ID (diamond, complex, grid, star, layered, linear, parallel, bottleneck)
 
-**使用例:**
+**Usage:**
 ```
 flow_control> load complex
 ✅ Loaded: Complex Multi-Path
    Topology: 6 nodes, 8 edges, 4 paths
    Features: 4 paths, Shared edges, Flow interaction analysis
-💡 Use 'suggest' to apply recommended flows
 ```
 
 ### `info [name]`
 
-サンプルの詳細情報を表示します。引数なしの場合、現在のサンプルの情報を表示。
+Displays detailed information about a sample. Without arguments, shows current sample information.
 
-**引数（オプション）:**
-- `name`: サンプルID
+**Arguments (Optional):**
+- `name`: Sample ID
 
-**使用例:**
+**Usage:**
 ```
 flow_control> info star
 ```
 
-**出力例:**
+**Example Output:**
 ```
 📊 SAMPLE INFO: STAR
 ============================================================
@@ -486,32 +485,17 @@ Suggested flows:
 💡 Use 'load star' to switch to this sample
 ```
 
-### `suggest`
-
-現在のサンプルに対して推奨フロー値を適用します。
-
-**使用例:**
-```
-flow_control> suggest
-✅ Suggested flows applied successfully
-Throughput:   9.0 | P1:63% P2:67%
-📈 Flow Analysis:
-   Current throughput: 9.00
-   Theoretical max: 14.00
-   Utilization: 64.3%
-```
-
 ---
 
-## 可視化コマンド
+## Visualization Commands
 
-ネットワークグラフを可視化するコマンド群です。
+Command group for visualizing network graphs.
 
 ### `display` / `d`
 
-ネットワークグラフを表示します（デフォルトでs-t最適化レイアウト）。
+Displays the network graph (default: s-t optimized layout).
 
-**使用例:**
+**Usage:**
 ```
 flow_control> display
 🎨 Displaying network graph...
@@ -520,12 +504,12 @@ flow_control> display
 
 ### `display <path1> [path2] ...`
 
-指定したパスをハイライト表示します。
+Displays the graph with specified paths highlighted.
 
-**引数:**
-- `path1, path2, ...`: ハイライトするパスID
+**Arguments:**
+- `path1, path2, ...`: Path IDs to highlight
 
-**使用例:**
+**Usage:**
 ```
 flow_control> display P1 P2
 🎨 Displaying network graph...
@@ -535,17 +519,17 @@ flow_control> display P1 P2
 
 ### `display layout <type>`
 
-グラフレイアウトを変更します。
+Changes the graph layout.
 
-**引数:**
-- `type`: レイアウトタイプ
-  - `planar_st`: s-t最適化平面配置（デフォルト）
-  - `planar`: 平面グラフ配置
-  - `spring`: バネモデル配置
-  - `grid`: グリッド配置
-  - `hierarchical`: 階層配置
+**Arguments:**
+- `type`: Layout type
+  - `planar_st`: s-t optimized planar layout (default)
+  - `planar`: Planar graph layout
+  - `spring`: Spring model layout
+  - `grid`: Grid layout
+  - `hierarchical`: Hierarchical layout
 
-**使用例:**
+**Usage:**
 ```
 flow_control> display layout spring
 🎨 Displaying network graph...
@@ -555,12 +539,12 @@ flow_control> display layout spring
 
 ### `display save <filename>`
 
-グラフを画像ファイルとして保存します。
+Saves the graph as an image file.
 
-**引数:**
-- `filename`: 保存先ファイル名（.png推奨）
+**Arguments:**
+- `filename`: Save destination filename (.png recommended)
 
-**使用例:**
+**Usage:**
 ```
 flow_control> display save network_state.png
 🎨 Displaying network graph...
@@ -568,9 +552,9 @@ flow_control> display save network_state.png
 ✅ Graph visualization displayed
 ```
 
-### 複合使用例
+### Combined Usage Example
 
-複数のオプションを組み合わせて使用できます：
+Multiple options can be combined:
 
 ```
 flow_control> display P1 P3 layout planar_st save result.png
@@ -583,24 +567,24 @@ flow_control> display P1 P3 layout planar_st save result.png
 
 ---
 
-## システムコマンド
+## System Commands
 
-システム制御用のコマンド群です。
+System control commands.
 
 ### `help` / `h`
 
-ヘルプ情報を表示します。
+Displays help information.
 
-**使用例:**
+**Usage:**
 ```
 flow_control> help
 ```
 
 ### `quit` / `q` / `exit`
 
-インタラクティブモニターを終了します。
+Exits the interactive monitor.
 
-**使用例:**
+**Usage:**
 ```
 flow_control> quit
 🏁 Interactive monitor session ended.
@@ -608,63 +592,63 @@ flow_control> quit
 
 ---
 
-## CLI機能 ⭐ NEW
+## CLI Features ⭐ NEW
 
-インタラクティブモニターの使いやすさを向上するコマンドライン機能です。
+Command-line features that enhance the usability of the interactive monitor.
 
-### コマンドヒストリ
+### Command History
 
-**機能:**
-- 過去に実行したコマンドを記憶
-- セッション間で永続化（`~/.flow_control_history`）
-- 最大1000コマンド保存
+**Features:**
+- Remembers previously executed commands
+- Persistent across sessions (`~/.flow_control_history`)
+- Stores up to 1000 commands
 
-**操作方法:**
-- `↑` / `Ctrl+P`: 前のコマンド
-- `↓` / `Ctrl+N`: 次のコマンド
-- 空のプロンプトで`↑`押下で最後のコマンドを呼び出し
+**Operation:**
+- `↑` / `Ctrl+P`: Previous command
+- `↓` / `Ctrl+N`: Next command
+- Press `↑` on empty prompt to recall last command
 
-**使用例:**
+**Usage:**
 ```
 flow_control> set P1 5.0
 ✅ Updated path P1 flow by 5.00
 
-flow_control> [↑を押下]
-flow_control> set P1 5.0  # 前のコマンドが表示される
+flow_control> [Press ↑]
+flow_control> set P1 5.0  # Previous command is displayed
 ```
 
-### コマンドライン編集
+### Command Line Editing
 
-**機能:**
-- カーソル移動、文字削除、行編集が可能
-- 長いコマンドの修正が簡単
+**Features:**
+- Cursor movement, character deletion, line editing capabilities
+- Easy modification of long commands
 
-**キーバインド:**
-- `Ctrl+A`: 行頭に移動
-- `Ctrl+E`: 行末に移動  
-- `Ctrl+B` / `←`: カーソルを左に移動
-- `Ctrl+F` / `→`: カーソルを右に移動
-- `Ctrl+D`: カーソル位置の文字を削除
-- `Ctrl+K`: カーソル以降を削除
-- `Ctrl+U`: 行全体を削除
+**Key Bindings:**
+- `Ctrl+A`: Move to beginning of line
+- `Ctrl+E`: Move to end of line  
+- `Ctrl+B` / `←`: Move cursor left
+- `Ctrl+F` / `→`: Move cursor right
+- `Ctrl+D`: Delete character at cursor
+- `Ctrl+K`: Delete from cursor to end
+- `Ctrl+U`: Delete entire line
 
-**使用例:**
+**Usage:**
 ```
 flow_control> set P1 10.0
-             ↑ここでCtrl+A押下してカーソルを行頭に移動
+             ↑Press Ctrl+A to move cursor to beginning
 flow_control> set P1 10.0
-         ↑ここに移動、数値部分だけ編集可能
+         ↑Move here, can edit just the number part
 ```
 
-### Tab補完
+### Tab Completion
 
-**機能:**
-- コマンド名、パスID、エッジID、ファイルパスの自動補完
-- 入力途中で`Tab`キーで候補を表示/選択
+**Features:**
+- Auto-completion for command names, path IDs, edge IDs, file paths
+- Press `Tab` during input to show/select candidates
 
-**補完対象:**
+**Completion Targets:**
 
-1. **コマンド名**
+1. **Command Names**
    ```
    flow_control> s[Tab]
    status  set  saturate  samples
@@ -673,25 +657,25 @@ flow_control> set P1 10.0
    flow_control> saturate
    ```
 
-2. **パスID** (set, adjust, saturate, maxflow, info path)
+2. **Path IDs** (set, adjust, saturate, maxflow, info path)
    ```
    flow_control> set P[Tab]
    P1  P2
    
-   flow_control> info path p[Tab]  # 大文字小文字区別なし
+   flow_control> info path p[Tab]  # case insensitive
    P1  P2
    ```
 
-3. **エッジID** (disable, enable, info edge)
+3. **Edge IDs** (disable, enable, info edge)
    ```
    flow_control> disable e[Tab]
    e0  e1  e2  e3
    
-   flow_control> info edge E[Tab]  # 大文字小文字区別なし
+   flow_control> info edge E[Tab]  # case insensitive
    e0  e1  e2  e3
    ```
 
-4. **サンプル名** (load, info)
+4. **Sample Names** (load, info)
    ```
    flow_control> load c[Tab]
    complex
@@ -700,7 +684,7 @@ flow_control> set P1 10.0
    diamond  complex  grid  star  layered  linear  parallel  bottleneck
    ```
 
-5. **ファイルパス** (loadfile)
+5. **File Paths** (loadfile)
    ```
    flow_control> loadfile examples/[Tab]
    examples/simple_diamond.yaml    examples/star_network.yaml
@@ -708,7 +692,7 @@ flow_control> set P1 10.0
    examples/grid_3x3.yaml
    ```
 
-6. **infoコマンドのサブタイプ**
+6. **info Command Subtypes**
    ```
    flow_control> info [Tab]
    path  edge
@@ -717,121 +701,121 @@ flow_control> set P1 10.0
    flow_control> info path
    ```
 
-### 大文字小文字インセンシティブ
+### Case-Insensitive Input
 
-**機能:**
-- パス名、エッジ名、ノード名で大文字小文字を区別しない
-- コマンド名は従来通り大文字小文字を区別
+**Features:**
+- Path names, edge names, node names are case insensitive
+- Command names remain case sensitive
 
-**対応コマンド:**
+**Supported Commands:**
 - `set p1 5.0` ≡ `set P1 5.0`
 - `info edge E2` ≡ `info edge e2`  
 - `disable E1` ≡ `disable e1`
 - `saturate p2` ≡ `saturate P2`
 
-**使用例:**
+**Usage:**
 ```
-flow_control> set p1 5.0      # 小文字入力
-✅ Updated path P1 flow by 5.00  # P1として認識
+flow_control> set p1 5.0      # lowercase input
+✅ Updated path P1 flow by 5.00  # recognized as P1
 
-flow_control> info edge E2    # 大文字入力  
-🔗 EDGE INFORMATION: e2         # e2として認識
+flow_control> info edge E2    # uppercase input  
+🔗 EDGE INFORMATION: e2         # recognized as e2
 
 flow_control> saturate P1
-flow_control> saturate p1     # どちらも同じ動作
+flow_control> saturate p1     # both work the same
 ```
 
 ---
 
-## エラーメッセージと対処法
+## Error Messages and Troubleshooting
 
-### よくあるエラー
+### Common Errors
 
-#### 容量超過エラー
+#### Capacity Exceeded Error
 ```
 ❌ Cannot update flow: Flow increase of 5.00 would exceed capacity by 2.00 at edge e3
 ```
-**対処法:** `maxflow`コマンドで利用可能容量を確認し、適切な値を設定
+**Solution:** Use `maxflow` command to check available capacity and set appropriate value
 
-#### パス/エッジが見つからない
+#### Path/Edge Not Found
 ```
 ❌ Path P5 not found
 ```
-**対処法:** `status`コマンドで利用可能なパス/エッジIDを確認
+**Solution:** Use `status` command to check available path/edge IDs
 
-#### エッジ既に無効化
+#### Edge Already Disabled
 ```
 ❌ Edge e1 is already disabled
 ```
-**対処法:** `edges`コマンドで現在の状態を確認
+**Solution:** Use `edges` command to check current status
 
 ---
 
-## 実践的なワークフロー
+## Practical Workflows
 
-### 1. 基本的な実験フロー
+### 1. Basic Experiment Flow
 
 ```bash
-# 1. ネットワークを選択
+# 1. Select network
 flow_control> load diamond
 
-# 2. 推奨フローを適用
+# 2. Apply suggested flows
 flow_control> suggest
 
-# 3. 状態を確認
+# 3. Check status
 flow_control> status
 
-# 4. 可視化
+# 4. Visualize
 flow_control> display
 
-# 5. エッジ故障をシミュレート
+# 5. Simulate edge failure
 flow_control> disable e1
 
-# 6. 影響を確認
+# 6. Check impact
 flow_control> observe
 
-# 7. 復旧
+# 7. Restore
 flow_control> enable e1
 ```
 
-### 2. 最適化実験フロー
+### 2. Optimization Experiment Flow
 
 ```bash
-# 1. 複雑なネットワークを読み込み
+# 1. Load complex network
 flow_control> load complex
 
-# 2. 各パスの最大容量を確認
+# 2. Check maximum capacity for each path
 flow_control> maxflow P1
 flow_control> maxflow P2
 flow_control> maxflow P3
 flow_control> maxflow P4
 
-# 3. 最適なフロー配分を設定
+# 3. Set optimal flow distribution
 flow_control> set P1 6.0
 flow_control> set P2 7.0
 flow_control> set P3 5.0
 flow_control> set P4 8.0
 
-# 4. ネットワーク効率を確認
+# 4. Check network efficiency
 flow_control> observe
 ```
 
-### 3. 視覚的分析フロー
+### 3. Visual Analysis Flow
 
 ```bash
-# 1. グリッドネットワークを読み込み
+# 1. Load grid network
 flow_control> load grid
 
-# 2. 初期状態を保存
+# 2. Save initial state
 flow_control> display save initial.png
 
-# 3. フローを設定
+# 3. Set flows
 flow_control> distribute 15.0
 
-# 4. フロー経路をハイライト表示
+# 4. Highlight flow paths
 flow_control> display P1 P2 P3 save with_flow.png
 
-# 5. ボトルネックパスを特定
+# 5. Identify bottleneck paths
 flow_control> maxflow P1
 flow_control> display P1 save bottleneck.png
 ```
@@ -840,7 +824,7 @@ flow_control> display P1 save bottleneck.png
 
 ## Tips & Tricks
 
-1. **Tab補完**: 多くのターミナルでTabキーによるコマンド補完が使用可能
-2. **コマンド履歴**: 上下矢印キーで過去のコマンドを参照
-3. **パイプライン処理**: 複数のコマンドを順次実行する場合は、各コマンドの成功を確認
-4. **状態保存**: 重要な状態は`display save`で画像として記録を推奨
+1. **Tab Completion**: Tab key auto-completion is available for most terminals
+2. **Command History**: Use up/down arrow keys to access previous commands
+3. **Pipeline Processing**: When executing multiple commands sequentially, confirm success of each command
+4. **State Saving**: Use `display save` to record important states as images
